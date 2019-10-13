@@ -1,0 +1,240 @@
+Year,Proj,Proj Name,Date,Format,Engr Est,Low Bid,Var,Result,Bids,Loc,Qtr,LD,Lead,Typeology
+2019,JFK-944.805,Replace Switch House #1 Emergency Generator,9/19/2019,Public,3840000,2936000,-0.235416667,GOOD,11,NY,3,Avi,Z,Infra
+2019,HT-924.110A,HT Admin Bldg - Second Means of Egress,9/12/2019,SBE,1360000,1843700,0.355661765,FAIL,5,NJ,3,TB&T,Z,Building
+2019,JFK-1078,Landside Asphalt Repairs via Work Order,9/5/2019,SBE,2030000,1887810,-0.070044335,GOOD,4,NY,3,Avi,Z,Paving
+2019,MF-234.217,HT & LT - Ventilation Buildings CCTV Cameras,9/4/2019,Public,1300000,919000,-0.293076923,GOOD,16,Both,3,TB&T,Z,Building
+2019,PJ-664.537,Upgrade Electrical Infrastructure - Service Drops for 13.2kV Loop,8/27/2019,SBE,1260000,1201422,-0.046490476,GOOD,6,NJ,3,Ports,Z,Infra
+2019,EWR-154.224A,Terminal B Exterior Wall Glass Upgrade,8/23/2019,Public,55300000,43999000,-0.204358047,GOOD,5,NJ,3,Avi,Z,Building
+2019,GWB-244.112,"Lower Level Steel, Paint and Traveller",8/22/2019,Public,194071979,171330900,-0.11717858,GOOD,6,Both,3,TB&T,Z,Infra
+2019,LGA-984.315,Landside Paving via Classified Work Order,8/22/2019,Public,1980000,1993000,0.006565657,GOOD,4,NY,3,Avi,Z,Paving
+2019,PAT-784.166,Tracks G & H Permanent Flood Protection,8/13/2019,Public,21500000,23111450,0.074951163,GOOD,7,NJ,3,PATH,Z,Infra
+2019,HT-924.152A,Maintenance Pavement Repairs via Work Order,8/8/2019,PQL,1755000,1312300,-0.252250712,GOOD,7,Both,3,TB&T,Z,Paving
+2019,HT-224.130,Latent Salt Damage Repairs and Mitigation,7/23/2019,Public,249010000,135022488,-0.457762789,FAIL,5,Both,3,TB&T,Z,Infra
+2019,PJ-664.532,Construct Second Lead Track,7/18/2019,Public,5660000,3930000,-0.30565371,GOOD,4,NJ,3,Ports,Z,Infra
+2019,HT-224.121,Roof Replacement at NJ Service Garage,7/16/2019,SBE,2060000,2899873,0.40770534,FAIL,4,NJ,3,TB&T,Z,Building
+2019,HT-944.004,Repair of Collapsed Drain Pipe at NY Land Vent Bldg,7/9/2019,SBE,400000,396784,-0.00804,GOOD,6,NY,3,TB&T,Z,Building
+2019,PN-654.072,Corbin St. & Reconstruction of Berth 3 Culvert,6/25/2019,Public,5280000,5097757,-0.03451572,GOOD,14,NJ,2,Ports,Z,Infra
+2019,LT-234.181,Admin Bldg HVAC Rehab Phase 2,6/12/2019,Public,2900000,3845000,0.325862069,FAIL,6,NJ,2,TB&T,Z,Building
+2019,HT-224.134,Flood Protection for Ventilation Buildings,6/6/2019,Public,2070000,2112649,0.020603382,GOOD,9,Both,2,TB&T,Z,Building
+2019,LGA-124.266,Repl Taxiway A between K to E,6/5/2019,Public,8360000,8947585,0.070285287,GOOD,3,NY,2,Avi,Z,Paving
+2019,PAT-784.165,HCMF Permanent Flood Protection,5/8/2019,Public,18800000,14551682,-0.225974362,GOOD,11,NJ,2,PATH,Z,Building
+2019,PAT-774.216,Replacement of Substation 8,5/2/2019,PQL,38200000,40811000,0.068350785,GOOD,5,NJ,2,PATH,Z,Building
+2019,PAT-774.217,Replacement of Substation 14,5/1/2019,PQL,44840000,48311245,0.077414028,GOOD,7,NJ,2,PATH,Z,Building
+2019,JFK-154.020,Cut & Cover Tunnel Power Distribution Vault & Pump Station Repairs,4/30/2019,Public,6950000,8720200,0.254705036,FAIL,6,NY,2,Avi,Z,Infra
+2019,LT-535,Rock Slope Priority Repairs for Slope A,4/16/2019,Public,1200000,1738750,0.448958333,FAIL,4,NJ,2,TB&T,Z,Infra
+2019,LGA-124.248,Pugsley Creek Wetland Mitigation,4/16/2019,Public,9330000,7407376,-0.206069025,GOOD,7,NY,2,Avi,Z,Infra
+2019,PAT-084.064,C-Yard CCTV,4/12/2019,SBE,1216000,1300529,0.06951398,GOOD,4,NJ,2,PATH,Z,Infra
+2019,PAT-774.179,HCMF Sewage Ejection Pit Rehabilitation,4/10/2019,Public,1090000,1142000,0.047706422,GOOD,3,NJ,2,PATH,Z,Infra
+2019,GWB-934.137A,NJ Admin Bldg Sprinkler System Rehabilitation,3/21/2019,SBE,1151000,1762891,0.531616855,FAIL,4,NJ,1,TB&T,Z,Building
+2019,JFK-184.676,Building 111 Interim Unified Operations Center,3/19/2019,Public,2390000,2374684,-0.006408368,GOOD,5,NY,1,Avi,Z,Building
+2019,LGA-124.256,Rehab of Fuel Farm Substation,3/7/2019,SBE,2460000,2542676,0.03360813,GOOD,4,NY,1,Avi,Z,Infra
+2019,JFK-184.043,Taxiways CA and CB Paving & Enhancements,3/5/2019,Public,42125550,34053550,-0.191617676,FAIL,2,NY,1,Avi,Z,Paving
+2019,PN-654.566,Rehab of Berth 25 and East End Bulkhead Extension (Grouting),2/21/2019,Public,4450000,5282906,0.187169888,FAIL,7,NJ,1,Ports,Z,Infra
+2019,GWB-984.205,GWB - Maintenance Pavement Repairs via Work Order,2/20/2019,PQL,1790000,1443785,-0.193416201,GOOD,7,Both,1,TB&T,Z,Paving
+2019,AK-196A,SI Bridges - Maintenance Pavement Repairs via Work Order,2/20/2019,PQL,1880000,1101828,-0.413921277,GOOD,6,Both,1,TB&T,Z,Paving
+2019,GWB-934.046,Flag Hoist System Upgrade,2/7/2019,SBE,1130000,1686000,0.492035398,FAIL,2,NJ,1,TB&T,Z,Infra
+2019,LGA-124.270,Replace West Field Lighting Vault Emergency Generator,2/7/2019,SBE,684000,615000,-0.100877193,GOOD,5,NY,1,Avi,Z,Infra
+2019,MFP-994.679,NJ - Maintenance Dredging via Work Order,2/5/2019,PQL,13910000,11745510,-0.155606758,GOOD,4,NJ,1,Ports,Z,Infra
+2019,GWB-244.260,Main Span Upper Level Struct Stl Rehab (Phase 2) & Appurtenances,1/31/2019,Public,92495500,63348000,-0.315123438,FAIL,3,Both,1,TB&T,Z,Infra
+2019,EWR-154.306A,Rehab of Runway 11-29,1/24/2019,Public,23450000,25644000,0.093560768,GOOD,2,NJ,1,Avi,Z,Paving
+2019,GWB-244.236,Intelligent Transportation System Repl Signs and Field Devices,1/23/2019,Public,28219450,27620150,-0.021237125,GOOD,6,Both,1,TB&T,Z,Infra
+2019,JFK-174.016,Bridges J31 & J32 Rehab - Aqueduct Road,1/10/2019,Public,4500000,4863085,0.080685556,GOOD,6,NY,1,Avi,Z,Infra
+2019,EWR-154.360,Bldg 76 Underground Storage Tank Repl,1/3/2019,SBE,426000,745850,0.750821596,FAIL,2,NJ,1,Avi,Z,Building
+2018,TEB-144.055,"Rehab of Taxiways G, L and P",12/18/2018,Public,10250000,8275000,-0.192682927,FAIL,3,NJ,4,Avi,Z,Paving
+2018,PAT-774.176,HCMF-Replace Track Slab and Rehab of Parking Lots & Roads,12/7/2018,Public,5000000,4380000,-0.124,GOOD,4,NJ,4,PATH,Z,Paving
+2018,PAT-214.013,JSQ - Public Restroom Rehabilitation,12/6/2018,SBE,1500000,2546000,0.697333333,FAIL,3,NJ,4,PATH,Z,Building
+2018,EWR-154.386,Term A Redev - Airside Utilities and Paving South phase 2,12/4/2018,Public,122920000,119769038,-0.02563425,GOOD,2,NJ,4,Avi,Z,Infra
+2018,LGA-124.269,Hangar 7S Drainage Rehabilitation,12/4/2018,SBE,448000,432222,-0.03521875,GOOD,6,NY,4,Avi,Z,Infra
+2018,LGA-124.268,Patrol Road Drainage Rehabilitation,11/29/2018,SBE,287000,369034,0.285832753,FAIL,5,NY,4,Avi,Z,Infra
+2018,EWR-154.299,Repl CHIRP North Electric Substation and Chiller Upgrades,11/15/2018,Public,12570000,9714000,-0.227207637,FAIL,4,NJ,4,Avi,Z,Infra
+2018,JFK-164.020,Reconstruct Runway 13L-31R and Associated Taxiways,11/9/2018,Public,186355200,152100000,-0.183816711,FAIL,3,NY,4,Avi,Z,Paving
+2018,LGA-924.120,Runway Instrument Landing & Approach Lighting Pier Repairs,11/8/2018,Public,784000,968530,0.235369898,FAIL,3,NY,4,Avi,Z,Infra
+2018,PAT-024.200,Upgrade of Fire Supression System,11/8/2018,Public,9720000,7666000,-0.211316872,FAIL,4,Both,4,PATH,Z,Building
+2018,HT-224.125,NY Emergency Garage Bldg - Parapet Repairs and Roof Replacement,11/6/2018,SBE,2215000,1984098,-0.104244695,GOOD,4,NY,4,TB&T,Z,Building
+2018,PAT-774.174,Grove Street Headhouse Permanent Flood Protection,11/1/2018,Public,9650000,9200000,-0.046632124,GOOD,1,NJ,4,PATH,Z,Building
+2018,PAT-784.175,Extend C-Yard Rail Bridge over Waldo Tunnel Portal,10/31/2018,Public,6500000,4149491,-0.361616769,FAIL,8,NJ,4,PATH,Z,Infra
+2018,PAT-630,South Street Compressor Upgrade,10/24/2018,Public,2971000,2384000,-0.197576574,GOOD,2,NJ,4,PATH,Z,Infra
+2018,BT-254.153,Partial South Wing 3rd Flr Wearing Course and Waterproof Membrane,10/18/2018,Public,7950000,6875775,-0.135122642,GOOD,2,NY,4,TB&T,Z,Paving
+2018,JFK-174.017,Replacement of 86 Pad Substation,10/16/2018,Public,3800000,3781700,-0.004815789,GOOD,8,NY,4,Avi,Z,Infra
+2018,GWB-924.168,Rock Slope Priority Repairs,10/9/2018,Public,1130000,1383700,0.224513274,FAIL,4,NJ,4,TB&T,Z,Infra
+2018,PAT-784.169,Exchange Place and Newport Head House Flood Protection,10/3/2018,Public,21700000,15765000,-0.273502304,GOOD,5,NJ,4,PATH,Z,Building
+2018,GWB-244.204A,Rehab Center and Lemoine Avenue Bridges,9/25/2018,Public,64356250,51485000,-0.2,GOOD,8,NJ,3,TB&T,Z,Infra
+2018,EWR-154.348,Airtrain Station P4 Elev Shaft Glass Replacement,9/25/2018,SBE,760000,994150,0.308092105,FAIL,3,NJ,3,Avi,Z,Building
+2018,PAT-024.203,Redundant Fluid Cooler at PATH Train Control Center,9/20/2018,SBE,1700000,1560315,-0.082167647,GOOD,2,NJ,3,PATH,Z,Building
+2018,PAT-784.162,Hoboken Flood Resiliency,9/13/2018,Public,5960000,6956000,0.167114094,FAIL,4,NJ,3,PATH,Z,Building
+2018,SWF-164.032,Terminal Expansion - Federal Inspection Services Facility,9/7/2018,Public,17920000,21068000,0.175669643,FAIL,2,NY,3,Avi,Z,Building
+2018,LT-944.096B,Replacement of Aboveground Storage Tanks,8/28/2018,Public,2500000,2952000,0.1808,FAIL,3,NY,3,TB&T,Z,Infra
+2018,LT-924.183,South Tube Pavement Fine Milling,8/14/2018,SBE,1300000,695800,-0.464769231,FAIL,2,Both,3,TB&T,Z,Paving
+2018,GWB-244.049,Trans-Manhattan Expressway Median Barriers and Water Mains,8/7/2018,Public,54744000,34776250,-0.364747735,GOOD,4,NY,3,TB&T,Z,Infra
+2018,PN-654.562A,Bldg 267 Roof Collapse Repair,8/2/2018,SBE,1980000,2882170,0.455641414,FAIL,6,NJ,3,Ports,Z,Building
+2018,MFA-924.454,EWR and TEB - Asphalt Repairs via Work Order,7/30/2018,PQL,9350000,6855365,-0.266805882,GOOD,3,NJ,3,Avi,Z,Paving
+2018,LGA-124.260,Rehab of Runway 4-22 and Associated Taxiways,7/18/2018,PQL,34796400,34483510,-0.008992022,GOOD,2,NY,3,Avi,Z,Paving
+2018,HT-224.082,Repl Bulkhead Doors in Ventilation Buildings,7/18/2018,Public,3570000,3861000,0.081512605,GOOD,6,Both,3,TB&T,Z,Building
+2018,EWR-154.308 bafo,Rehabilitation of Taxiway S,7/6/2018,PQL,3730000,4547000,0.219034853,FAIL,3,NJ,3,Avi,Z,Paving
+2018,PAT-774.170,Repl Exchange Place and Newport Escalators and Elevators,6/13/2018,Public,38600000,35950000,-0.06865285,GOOD,2,NJ,2,PATH,Z,Building
+2018,MFP-694.514,NY and NJ Marine Terminals - CCTV Upgrade and Expansion (Port Newark and Brooklyn),6/8/2018,VVP,2770000,2542996,-0.081950903,GOOD,6,Both,2,Ports,Z,Infra
+2018,PAT-024.099,Exchange Place Substation #4 Roof Replacement,5/31/2018,Public,1567000,918315,-0.413966177,GOOD,5,NJ,2,PATH,Z,Building
+2018,EWR-154.395,"Bridges N61, 62, 63, At-Grade Roadways and Appurtenances",5/30/2018,Public,153277500,118434757,-0.227318054,FAIL,13,NJ,2,Avi,Z,Infra
+2018,MFP-924.650,NY Marine Terminals - Maintenance Dredging via Work Order,5/10/2018,Public,4390000,4220000,-0.038724374,GOOD,4,NY,2,Ports,Z,Infra
+2018,LT-924.121,Steel Repairs at 38th St Bridge and Concrete Repairs at NY Vent Bldg South,5/1/2018,SBE,960000,413834,-0.568922917,FAIL,5,NY,2,TB&T,Z,Infra
+2018,PAT-774.169,Replace Elevators at Harrison Car Maintenance Facility,4/5/2018,Public,1520000,856934,-0.436227632,GOOD,4,NJ,2,PATH,M,Building
+2018,MFP-824.016,NY Marine Terminals Priority Repairs by Work Order,4/3/2018,Public,9140000,4659626,-0.490194092,GOOD,5,NY,2,Ports,S,Paving
+2018,TEB-144.046,Removal of Taxiway B and Construction of Taxiway V,4/3/2018,Public,3441000,2993080,-0.130171462,GOOD,3,NJ,2,Avi,C,Paving
+2018,LGA-124.261,Rehab of Pump House 1 Retaining Wall,3/20/2018,Public,1440000,1928000,0.338888889,FAIL,7,NY,1,Avi,S,Infra
+2018,AKO-284.051,Main Spain Pier and Fender Upgrades,3/20/2018,Public,27125000,22964560,-0.153380276,GOOD,10,Both,1,TB&T,S,Infra
+2018,AKO-284.049,Tollhouse Building Roof,3/15/2018,Public,1150000,1253317,0.08984087,GOOD,6,NY,1,TB&T,A,Building
+2018,LT-924.175,Helix Guiderail Repair and Manhole Cover Relocation,3/14/2018,MWBE,600000,749000,0.248333333,FAIL,3,NJ,1,TB&T,C,Infra
+2018,EWR-154.396,Bridge N64 and Hotel Road Widening,3/9/2018,Public,10900000,10417536,-0.044262752,GOOD,11,NJ,1,Avi,C,Infra
+2018,PAT-784.172,Hoboken Station Elevator Flood Resiliency,3/8/2018,Public,1600000,1948000,0.2175,FAIL,2,NJ,1,PATH,A,Building
+2018,EWR-924.231,Priority and Safety Repairs,3/1/2018,Public,1273000,1050950,-0.174430479,GOOD,6,NJ,1,Avi,S,Infra
+2018,JFK-184.010,"Replace Control Tower Roofs, HVAC Equipment and Curtain Wall Repairs",2/16/2018,Public,23100000,16848000,-0.270649351,GOOD,6,NY,1,Avi,A,Building
+2018,LGA-124.264,Rehab of Runway Decks Wearing Course (Epoxy Stage 3),2/8/2018,PQL,10590000,9125000,-0.138338055,FAIL,2,NY,1,Avi,C,Paving
+2018,GWB-244.265,Pedestrian Safety Fencing on NJ Approach Parapets,2/7/2018,MWBE,1056000,619790,-0.413077652,GOOD,6,NJ,1,TB&T,S,Infra
+2018,LGA-774.264,Flood Protection at the West End Substation,1/25/2018,Public,1700000,1555555,-0.084967647,GOOD,9,NY,1,Avi,G,Building
+2018,HH-634.514,Howland Hook Upgrade of Pavement Subgrade,1/24/2018,Public,22000000,19988889,-0.091414136,GOOD,13,NY,1,Ports,G,Paving
+2018,PAT-924.802,Fire Alarm System Upgrade,1/18/2018,VVP,26900000,24990000,-0.071003717,GOOD,2,Both,1,PATH,E,Building
+2018,PAT-650,Tunnels E and F Infrastructure Repairs,1/10/2018,PQL,200000000,108511400,-0.457443,FAIL,5,Both,1,PATH,E,Infra
+2018,GWB-244.267,TME Hydrant and Water Main Rehabilitation,1/8/2018,PQL,8520000,6850075,-0.196000587,GOOD,5,NY,1,TB&T,C,Infra
+2017,GWB-244.261,Rehab of Low Voltage Power Systems,12/19/2017,MWBE,795000,353700,-0.55509434,GOOD,8,Both,4,TB&T,E,Infra
+2017,TEB-144.056,Rehabilitation of Sewage Pumps,12/14/2017,MWBE,979000,1168000,0.193054137,FAIL,2,NJ,4,Avi,M,Infra
+2017,LGA-924.287,Airside Asphalt Paving Repairs via Work Order,12/14/2017,PQL,4872000,3997350,-0.179525862,GOOD,5,NY,4,Avi,C,Paving
+2017,EWR-154.263,Terminal B Satellite B2 Sterile Corridor Glass Door Replacement,12/5/2017,Public,1530000,1189000,-0.222875817,GOOD,3,NJ,4,Avi,A,Infra
+2017,JFK-144.023,AOA Light Circuit Replacement,12/5/2017,Public,38000000,28470000,-0.250789474,GOOD,4,NY,4,Avi,E,Infra
+2017,EWR-154.235,"Rehab CTA Entrance and Bridges N1, N2, N5, N6",11/29/2017,Public,6600000,5189333,-0.213737424,GOOD,7,NJ,4,Avi,S,Infra
+2017,LT-234.193,Latent Salt Damage Repairs,11/15/2017,Public,1350000,2629000,0.947407407,FAIL,1,Both,4,TB&T,E,Infra
+2017,BT-254.085,Internal Structural Enhancements (Column Hardening),11/14/2017,VVP,17250000,22616488,0.311100754,FAIL,4,NY,4,TB&T,S,Infra
+2017,EWR-154.247,Terminal B Automated Passport System Kiosks,11/14/2017,MWBE,820000,861500,0.050609756,GOOD,4,NJ,4,Avi,E,Building
+2017,PJ-654.502,Greenville Yard phase 2,11/9/2017,Public,4860000,3418000,-0.296707819,GOOD,8,NJ,4,Ports,C,Infra
+2017,EWR-154.383,Terminal A Redev - Airside Paving and Utilities South phase 1,11/8/2017,PQL,26900000,26600000,-0.011152416,GOOD,3,NJ,4,Avi,C,Paving
+2017,LT-234.194,Flood Protection for Ventilation Bldgs and Emergency Generators,11/8/2017,Public,1650000,2278990,0.381206061,FAIL,5,Both,4,TB&T,G,Building
+2017,PAT-534.316A,JSQ Transportation Center - Hardening Phase 2,10/26/2017,VVP,2194000,1361078,-0.379636281,FAIL,6,NJ,4,PATH,C,Infra
+2017,JFK-154.021,Airside Switchgear Replacement,10/17/2017,Public,2800000,2847000,0.016785714,GOOD,9,NY,4,Avi,E,Infra
+2017,EWR-154.254,"Rehab of Terminal Frontage Bridges - Ph1 - Bridge N18, N20 Pier Caps",10/17/2017,Public,3000000,2812500,-0.0625,GOOD,2,NJ,4,Avi,S,Infra
+2017,EWR-924.384,"Bus Canopy B1, C1 and Gas Island Improvements and Roofing",10/5/2017,Public,970000,1285000,0.324742268,FAIL,6,NJ,4,Avi,A,Building
+2017,HT-924.144,"Heat Tracing and Insulation in Discharge Pipes, N&S Tubes",9/28/2017,MWBE,609000,579300,-0.048768473,GOOD,4,Both,3,TB&T,E,Infra
+2017,HT-924.106,Replace Missing Tiles at Walls and Ceiling,9/27/2017,Public,1250000,1068000,-0.1456,GOOD,6,Both,3,TB&T,A,Infra
+2017,GWB-244.042,"Replacement of 178/179 St Ramps, Bus Ramps and Bus Turnaround",9/26/2017,PQL,189900000,154487000,-0.186482359,GOOD,5,NY,3,TB&T,S,Infra
+2017,BP-694.510,Brooklyn Pier 10 Concrete Girder Repairs,9/21/2017,Public,1250000,876947,-0.2984424,GOOD,13,NY,3,Ports,S,Infra
+2017,MF-924.022,LT and GWB - Rock Slope Priority Repairs,9/19/2017,Public,1326000,1976491,0.490566365,FAIL,4,NJ,3,TB&T,G,Infra
+2017,EWR-251,Rehab of Taxiway Z from Runway 11 Edge to UA,8/17/2017,PQL,8500000,5682000,-0.331529412,FAIL,3,NJ,3,Avi,C,Paving
+2017,LGA-154.251,Rehab of Runway Deck Structural Elements phase 3,8/4/2017,Public,6040000,4845475,-0.19776904,GOOD,8,NY,3,Avi,S,Infra
+2017,MFP-924.662,NJ Marine Terminals - Maintenance Dredging via Work Order,8/3/2017,PQL,13720000,11539200,-0.158950437,GOOD,4,NJ,3,Ports,G,Infra
+2017,JFK-1070,Landside Asphalt Repairs via Work Ouder,8/2/2017,Public,1650000,1320718,-0.199564848,GOOD,4,NY,3,Avi,C,Paving
+2017,JFK-154.024,Backflow Prevention & Water Meters Phase 4,8/1/2017,Public,1330000,936000,-0.296240602,GOOD,6,NY,3,Avi,M,Infra
+2017,HT-224.120,Rehabilitation of Bronze Doors at Spring Street,7/26/2017,Public,700000,614770,-0.121757143,GOOD,2,NY,3,TB&T,A,Building
+2017,LGA-124.244,AOA Light Circuit Replacement,7/25/2017,Public,7200000,1936000,-0.731111111,FAIL,4,NY,3,Avi,E,Infra
+2017,PAT-024.002,Exchange Place Underwater Netting,6/27/2017,PQL,1480000,1483000,0.002027027,GOOD,7,NJ,2,PATH,G,Infra
+2017,EWR-154.240,Meeter-Greeter Queuing Area Modifications,6/15/2017,MWBE,850000,887000,0.043529412,GOOD,3,NJ,2,Avi,A,Building
+2017,EWR-154.227,Terminal B CCTV at Baggage Areas,6/14/2017,VVP,2900000,1157000,-0.601034483,FAIL,5,NJ,2,Avi,E,Building
+2017,LGA-774.235,Emergency Generators at Various Locations,6/8/2017,VVP,6445000,7166666,0.111973002,FAIL,11,NY,2,Avi,E,Building
+2017,EWR-154.271,Central Heating and Refrigeration Plant South Substation Roof Replacement,6/7/2017,MWBE,650000,865508,0.331550769,FAIL,3,NJ,2,Avi,A,Building
+2017,EWR-154.264,Rehab CTA Frontage Bridges N18 and N20 Longitudinal Joints,6/7/2017,MWBE,1070000,758000,-0.291588785,FAIL,5,NJ,2,Avi,S,Infra
+2017,GWB-924.159B,NJ Admin Bldg HW/CW Piping Replacement,6/6/2017,Public,771000,946600,0.227756161,FAIL,2,NJ,2,TB&T,M,Building
+2017,EWR-924.233,"Priority Repair of Bridges N14, N15, N18, N19, N21, N42, N43",5/31/2017,Public,1140000,904780,-0.206333333,GOOD,9,NJ,2,Avi,S,Infra
+2017,JFK-154.019,Install Gate/Check Valves for Exist Stormwater Outfalls 2-3-4-5-6,5/25/2017,Public,2850000,1808548,-0.365421754,FAIL,11,NY,2,Avi,C,Infra
+2017,PAT-024.031,Replacement of Substation 7,5/18/2017,VVP,29400000,40981000,0.393911565,FAIL,2,NJ,2,PATH,A,Building
+2017,MFP-924.641,NY & NJ Marine Terminals - Multi-Facility Fender System Rehab via WO,5/17/2017,Public,5000000,5210665,0.042133,GOOD,9,Both,2,Ports,S,Infra
+2017,EP-924.643,Priority Marine Rehab via Work Order,5/16/2017,Public,9000000,10805265,0.200585,FAIL,2,NJ,2,Ports,S,Infra
+2017,LT-234.179,Waterside Buffer Zone Protection,4/26/2017,PQL,3589000,3875045,0.079700474,GOOD,3,NY,2,TB&T,S,Infra
+2017,GWB-924.176,Upper Level Sidewalk Repairs via Work Order,4/21/2017,Public,2060000,2614625,0.269235437,FAIL,5,Both,2,TB&T,S,Paving
+2017,MFP-924.645A,NJ Paving and Utility Rehab by Work Order,4/20/2017,MWBE,2625000,2472675,-0.058028571,GOOD,6,NJ,2,Ports,C,Paving
+2017,PN-654.558,"Berths 26, 28, 32, 34 Dredging",4/20/2017,Public,1520000,994200,-0.345921053,GOOD,4,NJ,2,Ports,G,Infra
+2017,TEB-144.048,AOA Light Circuit Replacement,4/20/2017,PQL,12630000,10849023,-0.141011639,GOOD,2,NJ,2,Avi,E,Infra
+2017,PAT-084.001,Replacement of Substation 9,4/19/2017,PQL,30360000,32920674,0.084343676,GOOD,3,NJ,2,PATH,A,Building
+2017,EWR-154.234,AOA Light Circuit Replacement,4/19/2017,PQL,18870000,19910000,0.055113937,GOOD,3,NJ,2,Avi,E,Infra
+2017,MFP-924.634,NY Marine Terminals - Rail Rehab via Work Order,4/6/2017,Public,1655000,1398667,-0.154883988,GOOD,3,NY,2,Ports,C,Infra
+2017,BT-254.123,PABT Supplemental Fire Alarm Systems,3/29/2017,Public,3700000,2490000,-0.327027027,GOOD,7,NY,1,TB&T,E,Building
+2017,LGA-124.255,Rehab of Runway 22 Deck Wearing Course Panel 1A,3/21/2017,PQL,3750000,2468147,-0.341827467,FAIL,3,NY,1,Avi,C,Paving
+2017,MFP-072.016,NY Marine Terminals - Paving and Utilities by Work Order,3/16/2017,MWBE,1425000,1087425,-0.236894737,GOOD,6,NY,1,Ports,C,Paving
+2017,GWB-244.263,Replacement of Automatic Transfer Switches,2/23/2017,MWBE,240000,97300,-0.594583333,FAIL,6,NJ,1,TB&T,E,Infra
+2017,GWB-244.048,Replacement of Suspender Ropes and Rehab of Main Cables & Strands,2/23/2017,PQL,479900000,451841280,-0.058467847,GOOD,5,Both,1,TB&T,S,Infra
+2017,LGA-124.250,"Rehab Taxiways B, AA, BB, and Associated Taxiways",2/21/2017,PQL,10393000,7903950,-0.239492928,FAIL,3,NY,1,Avi,C,Paving
+2017,TEB-144.045,Storm Drainage System Rehab Phase 1,2/14/2017,Public,2580000,1386000,-0.462790698,GOOD,16,NJ,1,Avi,C,Infra
+2017,EWR-924.375,Peripheral Ditch Containment Boom Anchor Walls,2/8/2017,Public,970000,756482,-0.220121649,GOOD,9,NJ,1,Avi,S,Infra
+2017,GWB-924.170,Maintenance Pavement Repairs via Work Order,2/7/2017,PQL,1965000,1450000,-0.262086514,GOOD,6,Both,1,TB&T,C,Paving
+2017,JFK-124.009,"Bldg 14 Roof Replacement, East Wing",2/2/2017,Public,4800000,3901193,-0.187251458,GOOD,14,NY,1,Avi,A,Building
+2017,JFK-154.022,Vehicle Gates Security Upgrade,1/30/2017,VVP,6500000,5987000,-0.078923077,GOOD,5,NY,1,Avi,C,Infra
+2017,LGA-103.015,Pump House 6 Substation,1/26/2017,Public,5100000,4640176,-0.090161569,GOOD,7,NY,1,Avi,E,Infra
+2017,EWR-154.392,"Terminal A Redev - Bridges N57, N58, N59 and Utilities ",1/24/2017,PQL,69800000,67107000,-0.038581662,GOOD,9,NJ,1,Avi,C,Infra
+2017,HT-924.089,NJ Service Building 1 and 2 Priority Repairs,1/18/2017,MWBE,1410000,1399756,-0.007265248,GOOD,3,NJ,1,TB&T,A,Building
+2017,MFP-924.644,NJ Marine Terminals Railroad Rehab via Work Order,1/17/2017,Public,4200000,3987114,-0.050687143,GOOD,3,NJ,1,Ports,C,Infra
+2017,JFK-1067,Asphalt Pavement Repairs via Work Order,1/11/2017,PQL,12071025,9977777,-0.173410957,FAIL,3,NY,1,Avi,C,Paving
+2017,JFK-124.016,"Rehab Taxiway Q, QG and Restricted Vehicle Service Road",1/4/2017,PQL,28695000,31768035,0.107093048,GOOD,2,NY,1,Avi,C,Paving
+2016,PAT-084.039,Event Detection Systems for Tunnels E and F,12/27/2016,PQL,18500000,15978000,-0.136324324,GOOD,2,Both,4,PATH,Z,Infra
+2016,EWR-924.288,Fuel Farm Roadway Drainage Improvements,12/21/2016,MWBE,600000,421111,-0.298148333,GOOD,8,NJ,4,Avi,Z,Infra
+2016,PN-654.551,Tyler Street Pavement Rehab,12/15/2016,MWBE,1460000,1457020,-0.002041096,GOOD,7,NJ,4,Ports,Z,Paving
+2016,PJ-664.503,Greenville Yard Phase 1,12/14/2016,Public,61900000,47681062,-0.229708207,GOOD,7,NJ,4,Ports,Z,Infra
+2016,LGA-124.236,Wetland Mitigation at Westchester Creek,12/8/2016,Public,2170000,1903225,-0.122937788,GOOD,5,NY,4,Avi,Z,Infra
+2016,SWF-017,Asphalt and Concrete Repairs via Work Order,11/29/2016,Public,1763000,2233850,0.267073171,FAIL,2,NY,4,Avi,Z,Paving
+2016,GWB-563,Sanitary Sewer Rehab at NJ Admin Bldg Lower Parking Lot,11/7/2016,PQL,850000,651800,-0.233176471,GOOD,9,NJ,4,TB&T,Z,Paving
+2016,HT-924.097,Ventilation Bldg Evac Stack Inspection Structures,11/3/2016,MWBE,480000,770000,0.604166667,FAIL,4,Both,4,TB&T,Z,Infra
+2016,AKO-924.054,OBX - Structural Rehabilitation,10/27/2016,Public,2150000,1654320,-0.230548837,FAIL,1,Both,4,TB&T,Z,Infra
+2016,HT-224.127,Replacement of Piers 9 and 204 Phase II,10/25/2016,Public,67636000,49942700,-0.261595896,FAIL,7,NJ,4,TB&T,Z,Infra
+2016,PAT-024.069A,30th Street Mezzanine Rehab,10/24/2016,Public,2400000,3617000,0.507083333,FAIL,2,NY,4,PATH,Z,Building
+2016,PJ-664.527,Bldg 108 Switchgear Replacement,10/5/2016,Public,3120000,2147100,-0.311826923,GOOD,7,NJ,4,Ports,Z,Building
+2016,JFK-144.019,Rehab Runway4R-22L and Associated Taxiways,9/13/2016,PQL,73640000,68462700,-0.07030554,GOOD,2,NY,3,Avi,Z,Paving
+2016,PN-654.042A,Demo Buildings 269 and 270,8/30/2016,Public,2000000,1460000,-0.27,GOOD,10,NJ,3,Ports,Z,Building
+2016,EWR-924.366,Bridge N5 Flooding Mitigation,8/24/2016,MWBE,230000,274450,0.19326087,FAIL,3,NJ,3,Avi,Z,Infra
+2016,PAT-784.164,Replace Roof - MacMillian-Bloedel Building,8/19/2016,Public,6120000,4674300,-0.23622549,GOOD,6,NJ,3,PATH,Z,Building
+2016,LT-534,Maintenance Pavement Repairs via Work Order,8/11/2016,Public,1450000,763000,-0.473793103,GOOD,6,NY,3,TB&T,Z,Paving
+2016,LT-934.027,NJ Admin Bldg - Emergency Power Modifications,8/4/2016,MWBE,800000,485250,-0.3934375,GOOD,4,NJ,3,TB&T,Z,Building
+2016,JFK-1064,Bulk Fuel Farm West End & Satellite Remediation Upgrades,8/2/2016,Public,1750000,1930000,0.102857143,GOOD,9,NY,3,Avi,Z,Infra
+2016,LT-800.382,North Tube Pump Discharge Line,7/28/2016,MWBE,1636000,1365000,-0.165647922,GOOD,3,NY,3,TB&T,Z,Infra
+2016,LT-924.028,Priority Repairs on NY Approach Retaining Walls (Dyer Ave.),6/17/2016,Public,1800000,1628370,-0.09535,GOOD,13,NY,2,TB&T,Z,Infra
+2016,PN-654.038,Expressrail Port Newark Administration Building,6/2/2016,D-B,2253000,2665637,0.183150022,FAIL,4,NJ,2,Ports,Z,Building
+2016,HT-469,Mitigate Water Leakage at Ventilation Ducts and Mid-River Pump Room,5/27/2016,Public,2800000,3295274,0.176883571,FAIL,6,Both,2,TB&T,Z,Infra
+2016,LGA-124.086,Rehab of Runway 22 Deck Wearing Course,5/24/2016,PQL,1930000,2277000,0.179792746,FAIL,4,NY,2,Avi,Z,Paving
+2016,NYNJRR-644.537,Repl Barge Mooring Structures at Greenville Yard,5/10/2016,Public,4000000,3838287,-0.04042825,GOOD,11,NJ,2,Ports,Z,Infra
+2016,LT-924.014A,Water Line Leak Repairs,5/6/2016,Public,2000000,2059960,0.02998,GOOD,2,NJ,2,TB&T,Z,Infra
+2016,GWB-244.246,Access Ramp Crash Barrier,4/28/2016,PQL,1700000,815000,-0.520588235,FAIL,7,NJ,2,TB&T,Z,Infra
+2016,HT-224.117,Waterside Buffer Zone Protection,4/26/2016,Public,600000,675000,0.125,FAIL,3,NY,2,TB&T,Z,Infra
+2016,EWR-924.281,Peripheral Ditch Tide Gate Valve Repairs,4/19/2016,Public,670000,897950,0.340223881,FAIL,5,NJ,2,Avi,Z,Infra
+2016,EP-684.509A,Bldg 1400 Upgrade of Fire Supression System,4/14/2016,Public,700000,442247,-0.368218571,GOOD,6,NJ,2,Ports,Z,Building
+2016,PAT-784.163,PATH - Infrastructure for Standby Generators,4/13/2016,Public,1900000,1348800,-0.290105263,GOOD,11,NJ,2,PATH,Z,Infra
+2016,SWF-164.054,Stewart Airport - Backflow Prevention and Sump Pumps,4/5/2016,Public,1300000,1334000,0.026153846,GOOD,6,NY,2,Avi,Z,Building
+2016,MFP-924.638,NJ Marine Terminals - Dredging via Work Order,3/21/2016,PQL,13100000,14145813,0.079833053,GOOD,5,NJ,1,Ports,Z,Infra
+2016,EWR-154.197,"Newark - Infrastructure Renewal, Electrical",3/9/2016,Public,25210000,17827873,-0.292825347,FAIL,13,NJ,1,Avi,Z,Infra
+2016,LGA-774.133B,LGA - Emergency Storm Drainage Outfalls,2/18/2016,Public,3250000,2849549,-0.123215692,GOOD,12,NY,1,Avi,Z,Infra
+2016,GWB-244.150,"GWB - Replacement of PIP Helix, et. al.",2/11/2016,Public,69865000,57000000,-0.184140843,GOOD,11,NJ,1,TB&T,Z,Infra
+2016,LGA-124.240,LGA - Rehab Taxiway B between G and CY,2/4/2016,Public,4072000,2733000,-0.328831041,FAIL,3,NY,1,Avi,Z,Paving
+2016,LGA-103.014,LGA - Pump Houses 2 and 3 Rehabilitation,1/25/2016,Public,2530000,1836000,-0.2743083,GOOD,7,NY,1,Avi,Z,Infra
+2016,PAT-774.154,PATH - Hoboken Station Under-Platform Fan Replacement,1/22/2016,Public,4574000,3774000,-0.174901618,GOOD,4,NJ,1,PATH,Z,Infra
+2016,PN-654.544,Port Newark - Install Intelligent Transport Devices and Traffic Signals,1/20/2016,Public,10000000,6499990,-0.350001,FAIL,6,NJ,1,Ports,Z,Infra
+2016,WTC-222.004,WTC - Tower One Public Safety Radio Room,1/19/2016,PQL,9000000,8936000,-0.007111111,GOOD,3,NY,1,Sec,Z,Building
+2016,PN-654.041,Port Newark - Davit Street Extension,1/14/2016,M/WBE,1200000,1050050,-0.124958333,GOOD,6,NJ,1,Ports,Z,Paving
+2015,AK-195,Staten Island Bridges - Maint Pvmt Repairs via WO,12/4/2015,PQL,2000000,2092850,0.046425,GOOD,4,NY,4,TB&T,Z,Paving
+2015,TP-104.006,Backflow Prevention Devices,11/30/2015,Public,1200000,1222222,0.018518333,GOOD,6,NY,4,Avi,Z,Infra
+2015,GWB-564,George Washington Bridge-Facility Wide Prioirty Rehabilitation,11/4/2015,Public,8700000,10162935,0.168153448,FAIL,3,Both,4,TB&T,Z,Infra
+2015,MFA-924.283,Newark Liberty International Airport and Teterboro Airport  Asphalt Concrete Pavement Repairs Via Work Order,11/2/2015,PQL,7055100,5774440,-0.181522586,FAIL,3,NJ,4,Avi,Z,Paving
+2015,HT-224.116,Holland Tunnel-Concrete Repairs at Air Supply Ports,10/30/2015,Public,7100000,6676400,-0.059661972,GOOD,11,Both,4,TB&T,Z,Infra
+2015,GWB-566,George Washington Bridge-Temporary Semac Relocation,10/27/2015,Public,1340000,1850000,0.380597015,FAIL,4,NJ,4,TB&T,Z,Infra
+2015,GWB-924.092,George Washington Bridge-Improvements to Bruce Reynolds Boulevard,10/20/2015,Public,1290000,1552600,0.203565891,FAIL,9,NJ,4,TB&T,Z,Paving
+2015,EWR-154.184,Newark Liberty International Airport-Central Heating & Refirgeration Plant Substation and Pumps Upgrade,10/15/2015,Public,3650000,3270000,-0.104109589,GOOD,6,NJ,4,Avi,Z,Infra
+2015,GWB-244.256,"George Washington Bridge-Pavement Rehabilitation of the Lower Level eastbound Approch Roadways, Lower Level Eastbound Bridge Span and Lower Expressway East Ramp",10/7/2015,PQL,7400000,4985882.5,-0.326232095,FAIL,4,Both,4,TB&T,Z,Paving
+2015,PN-654.036,Port Newark-Water System Rehabilitation At Central And South Sections,9/30/2015,Public,7000000,5851111,-0.164127,GOOD,15,NJ,3,Ports,Z,Infra
+2015,LGA-124.226,LaGuardia Airport-Hanger 7 South Build Out,9/21/2015,Public,7900000,6769800,-0.143063291,GOOD,18,NY,3,Avi,Z,Building
+2015,EWR-924.320,Newark Liberty International Airport-Terminal 'C' Level 1 Drainage Improvements,9/9/2015,M/WBE,325000,377777,0.162390769,FAIL,6,NJ,3,Avi,Z,Building
+2015,LGA-124.229,LaGuardia Airport - Watch Engineer's Office Relocation,8/27/2015,Public,1650000,1898000,0.15030303,FAIL,4,NY,3,Avi,Z,Infra
+2015,EWR-924.175A,Newark Liberty International Airport-Building No. 105 Roof Replacement,8/18/2015,M/WBE,354000,396811,0.120935028,FAIL,3,NJ,3,Avi,Z,Building
+2015,EWR-154.239,"Newark Liberty International Airport- Rehabilitation of Expansion Joints of Bridges N3, N9, N13, N17, N19 and N29, and Structural Elements",7/28/2015,Public,1918000,1389000,-0.275808133,GOOD,12,NJ,3,Avi,Z,Infra
+2015,LT-924.014,Lincoln Tunnel-Water Leak Repairs,6/23/2015,Public,1800000,2217200,0.231777778,FAIL,2,Both,2,TB&T,Z,Infra
+2015,GWB-244.240,"George Washington Bridge-Lower Level Priority Steel and Concrete Prepairs, Rehabilitation of Catwalks and Plaintenace Platform Travelers",6/22/2015,Public,6500000,6374800,-0.019261538,GOOD,7,Both,2,TB&T,Z,Infra
+2015,MFP-924.623,New York Marine Terminals-Paving and Utility Rehabilitation Via Work Order,6/4/2015,Public,1600000,1298005,-0.188746875,GOOD,6,NY,2,Ports,Z,Paving
+2015,NYNJRR-644.531,"NY and NJ Rail - Transfer Bridge #10 Reconstruction and Fender Modifications at 65th St Yard, Brooklyn",6/2/2015,Public,29100000,30452500,0.046477663,GOOD,11,NJ,2,Ports,Z,Infra
+2015,JFK-914.209,John F. Kennedy International Airport-Former Hangar 12 Site-West Area Lighting,5/21/2015,MBE,1550000,2333333.33,0.505376342,FAIL,2,NY,2,Avi,Z,Building
+2015,PN-654.545,Port Newark Berth 19 Wharf Restoration,5/21/2015,Public,6400000,5777000,-0.09734375,GOOD,7,NJ,2,Ports,Z,Infra
+2015,PAT-131.000,Path-Hackensack River Bridge Emergency Generator Fuel Tank,5/20/2015,Public,3340000,4538160,0.358730539,FAIL,3,NJ,2,PATH,Z,Infra
+2015,SWF-164.031A,Stewart International-Passenger Loading Bridges Pressurization Fans,5/19/2015,Public,1263000,930000,-0.263657957,FAIL,1,NY,2,Avi,Z,Infra
+2015,GWB-924.044,George Washington Bridge-Electrical Bus Replacement ,5/18/2015,MBE,830000,1650000,0.987951807,FAIL,1,Both,2,TB&T,Z,Infra
+2015,TEB-914.203,Teterboro Airport-Installation of Fencing to Mitigate Wildlife Hazards,4/21/2015,Public,735000,512568,-0.302628571,GOOD,9,NJ,2,Avi,Z,Infra
+2015,MFP-924.630,New Jersey Marine Terminals-Paving and Utility Rehabilitation via Work Order,4/14/2015,Public,2320000,1550780,-0.331560345,GOOD,9,NJ,2,Ports,Z,Paving
+2015,PAT-643-Work Order No. 2,Path-Tunnels E&F Temporary Event detection Systems (TEDS),4/14/2015,PQL,521000,1840000,2.531669866,FAIL,3,Both,2,PATH,Z,Infra
+2015,LGA-774.234,Laguardia Airport-Flood Protection at the West Field Lighting Vault,4/10/2015,Public,3760000,2999293,-0.202315691,GOOD,10,NY,2,Avi,Z,Infra
+2015,LGA-774.236,Laguardia airport-Flood Protection at the West End Substation,4/10/2015,Public,1770000,1397380,-0.210519774,GOOD,10,NY,2,Avi,Z,Infra
+2015,JFK-1050,John F. Kennedy International Airport-Replacement of Fire Alarm System at the Airport Traffic Control Tower,4/9/2015,Public,1850000,2137550,0.155432432,FAIL,8,NY,2,Avi,Z,Building
+2015,PJ-924.624,Port Jersey Marine Terminal-Paving and Utility Rehabilitation via Work Order,4/8/2015,MBE/WBE,1300000,878175,-0.324480769,GOOD,7,NJ,2,Ports,Z,Paving
+2015,PAT-084.057,PATH-Access Control and CCTV at Substation and Communications Rooms,3/17/2015,PQL,4450000,3620000,-0.186516854,GOOD,3,NJ,1,PATH,Z,Building
+2015,PN-654.004,"Port Newark-Berths 30, 32, and 34 Fender Systems Reconstruction",3/9/2015,Public,9600000,6748000,-0.297083333,GOOD,12,NJ,1,Ports,Z,Infra
+2015,JFK-134.025,John F. Kennedy International Airport-Unmanned AOA Gates and Perimeter Fence Enhancement-Phase II,2/25/2015,M/WBE,640000,574000,-0.103125,GOOD,4,NY,1,Sec,Z,Infra
+2015,LGA-124.231,Laguardia Airport-Rehabilitation of Taxiways West of Runway 4-22,2/22/2015,PQL,9700000,8742268,-0.098735258,GOOD,3,NY,1,Avi,Z,Paving
+2015,LGA-124.166,Laguardia Airport-Rehabilitation of Runway 13-31 and Associated Taxiways,2/3/2015,PQL,25770000,28747550,0.115543267,FAIL,3,NY,1,Avi,Z,Paving
