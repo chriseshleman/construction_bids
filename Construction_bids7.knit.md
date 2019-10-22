@@ -29,38 +29,14 @@ The economic data is just quarterly stuff from the usual suspects and is specifi
 
 Load some programming tools that are commonly used for this analysis. Not all of these packages will be used, and at some point it'll be worth backing up and cleaning the list. 
 
-```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
-rm(list = ls()) # clear global environment 
-cat("\014") # clear the console 
 
-library(olsrr) 
-library(data.table) 
-library(ggplot2) 
-library(lubridate) 
-library(doBy) 
-library(DataCombine) 
-library(dplyr) 
-library(compare) 
-library(StatMeasures) 
-library(caret) 
-library(mlbench) 
-library(glmnet) 
-library(tidyr) 
-library(tidyverse) 
-library(broom) 
-library(tidytext) 
-library(widyr) 
-library(Matrix) 
-library(ggrepel) 
-library(MLmetrics) 
-library(mltools) 
-```
 
 #Overview. 
 This effort bridges exploration of the agency's data with potential predictors from exogenous sources. 
 The key idea is that if economic indicators (numbers) can add measurable value to the agency's cost estimation methods, it can help set the agency up for better informed next steps. Those next steps are yet to be defined. 
 
-```{r}
+
+```r
 #![Here's what we have in mind.](Estimator_Data.png)
 ```
 
@@ -68,36 +44,11 @@ The measures of "accuracy" are, for now, bivariate correlation. We discuss below
 
 Data comes from a few sources and needs to be merged. Two usual suspects are the agency's internal project information and a set of economic indicators specific to Greater New York (18 counties on both sides of the Hudson River). 
 
-```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
-#setwd("C:/Users/ceshleman/Dropbox/Work and research/Port Authority/construction_bids")
-setwd("~/Dropbox/Work and research/Port Authority/construction_bids") 
-bids = read.csv("./Bid data 2019q3.csv") 
-bids$Year = as.factor(bids$Year) 
-head(bids) 
-bids$Date = as.Date(bids$Date,"%m/%d/%Y") 
-bids = bids[order(bids$Date),] # Sort things by date 
-bids$Engr.Est = as.numeric(bids$Engr.Est) 
 
-bids$Quarter = quarter(bids$Date) 
-bids$Quarter = paste("Q",quarter(bids$Date), sep="") 
-bids$Q = paste(bids$Year,bids$Quarter,sep="-") 
-```
 
 Add economic data. 
 
-```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
-econ = read.csv("./Economics 2019Q2.csv") 
-econ$Q = paste(econ$Year,econ$Quarter,sep="-")
 
-econ$Year = NULL  
-econ$Quarter = NULL 
-bids$Year = NULL 
-bids$Quarter = NULL 
-
-bids = merge(bids,econ, by = "Q", all.x=TRUE) 
-
-rm(econ) 
-```
 
 ## Add permits and steel prices.
 The City of New York's database on permitting covers comercial and residential activity. 
@@ -108,19 +59,12 @@ a decent barometer of construction activity in greater New York.
 
 Prices of construction materials and labor also figure into the agency's internal cost estimation, and I'll use steel prices for now. Future models might try and rope in other pricing data points, but the estimators are generally already taking prices into account when setting their numbers so this is likely of second- and third-order importance but the modeling selection algorithms may suggest using them. 
 
-```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
-permits_short = read.csv("./Permits_short.csv") 
-names(permits_short) 
-permits_short$X=NULL 
-names(permits_short) = c("Q","permits","permits_1") 
 
-bids = merge(bids, permits_short, by = "Q", all.x=TRUE) 
-rm(permits_short) 
-``` 
 
 The Engineering News-Record tracks and aggregates construction cost data through an index. Use that to cover prices. 
 
-```{r}
+
+```r
 cci = read.csv("./cci.csv") 
 names(cci) = tolower(names(cci)) 
 cci$avg. = NULL 
@@ -146,19 +90,11 @@ Stats software treats different variables in different ways depending on individ
 
 I'll need to tell the software to reformat some of the variables, namely the economic indicators. 
 
-```{r, echo=FALSE, include=TRUE, message = FALSE, warning = FALSE}
-bids$Employment.in.construction = as.numeric(as.character(bids$Employment.in.construction)) 
-bids$Output.in.construction = as.numeric(as.character(bids$Output.in.construction)) 
-bids$Total.population = as.numeric(as.character(bids$Total.population)) 
-bids$Total.employment = as.numeric(as.character(bids$Total.employment)) 
-bids$Total.output = as.numeric(as.character(bids$Total.output)) 
-```
+
 
 One variable of interest is the bidding process. Institutional discussions and earlier modeling suggests the bidding process may influence the bids. Limits placed on the range of bidders, for example, could, on average and holding other things constant, increase the average (and lowest qualifying) bid - this is basic microeconomics. I'll simplify the bidding format variable by making it binary: "public" for projects without significant constraints and "other" for ones, such as projects closed to firms not deemed "small business enterprises," that aren't. 
 
-```{r echo=FALSE}
-bids$Format = as.factor(ifelse(bids$Format=="Public","Public","Other")) 
-```
+
 
 There's room to also eventually include the names (anonymized is fine) of each project estimator to help modeling. Past work has suggested there isn't major causal variation between estimators — they generally do a pretty equivalent job in estimating bids. But having their names included nonetheless may prove to offer some control value. We can leave that to future modeling. 
 
@@ -168,24 +104,22 @@ We want to understand whether and how we might help the agency estimate the actu
 
 From here on we'll define "accuracy" as the ratio of dollars estimated over dollars bid. So a "1" would mean the engineering team nailed it, a "0.94" would mean they estimated 94 cents for every 1 dollar in the low bid, et cetera. 
 
-```{r echo=FALSE}
-bids$accuracy = bids$Engr.Est / bids$Low.Bid 
-```
+
 
 If there are outliers in there - projects that, for an unexplainable reason, was way off, consider removing it. 
 
-```{r echo=FALSE}
-#bids = subset(bids,bids$accuracy<3) # remove major outliers 
-```
+
 
 We may want to think of project size categorically. 
-```{r}
+
+```r
 bids$decile = decile(vector = bids$Low.Bid) 
 bids$decile = ordered(bids$decile, levels = 1:10)
 ```
 
 Back up data. 
-```{r}
+
+```r
 bid = bids # backup my data frame 
 ```
 
@@ -194,23 +128,32 @@ bid = bids # backup my data frame
 Now the data is prepped. 
 So split it into the training  / test sets we talked about at the start. The bids start in 2015. 
   
-```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
-train = subset(bids,bids$Date<"2019-03-31") 
-test = subset(bids,bids$Date>="2019-04-01") 
-```
+
 
 # Motivation. 
 Why do we think developing a conrolled multivariate (complicated) model will be worth it? Well, the average gap is $2.5 million, or 20%, off of our estimates. What's the raw (uncontrolled) bivariate relationship between engineering estimates and low bids? 
 
-```{r, echo = FALSE, message = FALSE, warning = FALSE}
-a = round(cor(bids$Low.Bid, bids$Engr.Est),5) 
-ggplot(bids, aes(x=log(Low.Bid), y=log(Engr.Est))) + geom_point(size=2,shape=1) + 
-  annotate(geom="text", x=12, y=19.5, label="Correlation", #"Scatter plot"
-              color="red") +
-  annotate(geom="text", x=12, y=19, label=a, #"Scatter plot"
-              color="red")
+![](Construction_bids7_files/figure-latex/unnamed-chunk-14-1.pdf)<!-- --> 
 
-summary(lm(bids$Low.Bid ~ bids$Engr.Est)) 
+```
+## 
+## Call:
+## lm(formula = bids$Low.Bid ~ bids$Engr.Est)
+## 
+## Residuals:
+##       Min        1Q    Median        3Q       Max 
+## -71323352   -523965   -139942    420586  54469074 
+## 
+## Coefficients:
+##                Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)   3.279e+05  5.162e+05   0.635    0.526    
+## bids$Engr.Est 8.274e-01  1.079e-02  76.701   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 7533000 on 237 degrees of freedom
+## Multiple R-squared:  0.9613,	Adjusted R-squared:  0.9611 
+## F-statistic:  5883 on 1 and 237 DF,  p-value: < 2.2e-16
 ```
 
 (The logarithm treatment is just to distribute it across the plot (one of the observations is an outlier).) 
@@ -219,7 +162,8 @@ The in-house engineers' guesses predict more than 98% of the variation in low bi
 
 Some of the remaining variation can be explained with some guesswork. Calculate summary stats for key variables - this will help later: 
 
-```{r}
+
+```r
 loc.summary = aggregate(accuracy ~ Loc, mean, data=na.omit(bids)) 
 type.summary = aggregate(accuracy ~ Typeology, mean, data=na.omit(bids)) 
 dec.summary = aggregate(accuracy ~ decile, mean, data=na.omit(bids)) 
@@ -227,46 +171,96 @@ dec.summary = aggregate(accuracy ~ decile, mean, data=na.omit(bids))
 
 Location likely has some predictive power that engineers may not be able to capture or fully predict. Basically, projects that span the Hudson River wind up costing more, on average, than ones plunked squarely in either New York or New Jersey. What's the raw (uncontrolled) relationship between bid accuracy and location? 
 
-```{r, echo = FALSE, message = FALSE, warning = FALSE}
-summary(lm(bids$accuracy ~ bids$Loc)) 
 
-ggplot(bids, aes(x = Loc, y = accuracy)) + #, shape = Loc)) +  
-    geom_hline(colour="dark gray", yintercept=1) +
-    geom_jitter(width=0.2) +
-    geom_crossbar(data=loc.summary, aes(ymin = accuracy, ymax = accuracy),
-                  size=1,col="red", width = .5) 
 ```
+## 
+## Call:
+## lm(formula = bids$accuracy ~ bids$Loc)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.86160 -0.23542 -0.05548  0.15351  2.55783 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  1.144748   0.062580  18.293   <2e-16 ***
+## bids$LocNJ  -0.003834   0.071492  -0.054    0.957    
+## bids$LocNY   0.016431   0.074665   0.220    0.826    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.3755 on 236 degrees of freedom
+## Multiple R-squared:  0.0006293,	Adjusted R-squared:  -0.00784 
+## F-statistic: 0.07431 on 2 and 236 DF,  p-value: 0.9284
+```
+
+![](Construction_bids7_files/figure-latex/unnamed-chunk-16-1.pdf)<!-- --> 
 
 
 The signal is stronger regarding the type of project, which has an identifiable (if yet uncontrolled) relationship with estimating accuracy. What's the raw (uncontrolled) relationship between estimation accuracy and the type of project? 
 
-```{r, echo = FALSE, message = FALSE, warning = FALSE}
-summary(lm(bids$accuracy ~ as.factor(bids$Typeology))) 
 
-ggplot(bids, aes(x = Typeology, y = accuracy)) + #, shape = Typeology)) +  
-    geom_hline(colour="dark gray", yintercept=1) +
-    geom_jitter(width=0.2) +
-    geom_crossbar(data=type.summary, aes(ymin = accuracy, ymax = accuracy),
-                  size=1,col="red", width = .5)
 ```
+## 
+## Call:
+## lm(formula = bids$accuracy ~ as.factor(bids$Typeology))
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.88863 -0.22069 -0.05558  0.14023  2.54722 
+## 
+## Coefficients:
+##                                 Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)                      1.04997    0.04747  22.118   <2e-16 ***
+## as.factor(bids$Typeology)Infra   0.12182    0.05761   2.115   0.0355 *  
+## as.factor(bids$Typeology)Paving  0.16086    0.07113   2.262   0.0246 *  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.3708 on 236 degrees of freedom
+## Multiple R-squared:  0.02561,	Adjusted R-squared:  0.01735 
+## F-statistic: 3.101 on 2 and 236 DF,  p-value: 0.04684
+```
+
+![](Construction_bids7_files/figure-latex/unnamed-chunk-17-1.pdf)<!-- --> 
 
 We see signals that projects of medium size (in dollar terms) may be less evasive than much larger or smaller projects. What's the relationship between low bids and accuracy, when we start considering the size of low bids? 
 
-```{r, echo = FALSE, message = FALSE, warning = FALSE}
-summary(lm(bids$accuracy ~ as.factor(bids$decile))) 
 
-ggplot(bids, aes(x = as.factor(decile), y = accuracy)) + 
-    geom_hline(colour="dark gray", yintercept=1) +
-    geom_jitter(width=0.2) +
-    geom_crossbar(data=dec.summary, aes(ymin = accuracy, ymax = accuracy),
-                  size=1,col="red", width = .5)
 ```
+## 
+## Call:
+## lm(formula = bids$accuracy ~ as.factor(bids$decile))
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.73608 -0.23930 -0.02694  0.14444  2.62999 
+## 
+## Coefficients:
+##                          Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)               1.14810    0.02372  48.408  < 2e-16 ***
+## as.factor(bids$decile).L -0.11517    0.07484  -1.539  0.12521    
+## as.factor(bids$decile).Q  0.21620    0.07503   2.881  0.00434 ** 
+## as.factor(bids$decile).C -0.03733    0.07486  -0.499  0.61851    
+## as.factor(bids$decile)^4 -0.03753    0.07502  -0.500  0.61734    
+## as.factor(bids$decile)^5  0.12608    0.07491   1.683  0.09373 .  
+## as.factor(bids$decile)^6  0.07655    0.07500   1.021  0.30843    
+## as.factor(bids$decile)^7 -0.03055    0.07501  -0.407  0.68420    
+## as.factor(bids$decile)^8  0.04269    0.07495   0.570  0.56952    
+## as.factor(bids$decile)^9 -0.13488    0.07537  -1.790  0.07482 .  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.3666 on 229 degrees of freedom
+## Multiple R-squared:  0.07545,	Adjusted R-squared:  0.03912 
+## F-statistic: 2.077 on 9 and 229 DF,  p-value: 0.03252
+```
+
+![](Construction_bids7_files/figure-latex/unnamed-chunk-18-1.pdf)<!-- --> 
 
 Facet by typeology: 
 
-```{r}
 
-```
 
 Visualizing and testing the data iteratively like this has offered some initial insight into what might be accounting for variation in accuracy. 
 
@@ -284,20 +278,50 @@ Note: ensure the "accuracy" variable we calculated earlier is dropped before mod
 Note 2: when a number appears in the output without context, it is likely an information criterion (and AIC), which may or may not provide value post-modeling. 
 
 First remove accuracy. 
-```{r}
+
+```r
 train$accuracy=NULL 
 test$accuracy=NULL 
 ```
 
 Run model. 
 
-```{r, echo=FALSE, message = FALSE, warning = FALSE}
-base = lm(log(Low.Bid) ~ Engr.Est + Employment.in.construction + Format + Typeology + permits_1 + cci + decile, data = train) 
 
-  summary(base) 
-  options(scipen=999)
-  mse_b = round(mse(train$Low.Bid,base$fitted.values),0)
-  adjr_b = round(summary(base)$adj.r.squared,3)
+```
+## 
+## Call:
+## lm(formula = log(Low.Bid) ~ Engr.Est + Employment.in.construction + 
+##     Format + Typeology + permits_1 + cci + decile, data = train)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -1.56367 -0.10711 -0.00202  0.13250  0.47008 
+## 
+## Coefficients:
+##                              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)                 1.515e+01  5.745e-01  26.370  < 2e-16 ***
+## Engr.Est                    6.433e-09  4.891e-10  13.153  < 2e-16 ***
+## Employment.in.construction -2.872e-03  5.104e-03  -0.563  0.57422    
+## FormatPublic                4.670e-02  3.317e-02   1.408  0.16074    
+## TypeologyInfra              6.966e-03  3.803e-02   0.183  0.85486    
+## TypeologyPaving             7.119e-02  4.592e-02   1.550  0.12265    
+## permits_1                  -2.669e-06  3.130e-06  -0.853  0.39479    
+## cci                         9.050e-05  1.879e-04   0.482  0.63063    
+## decile.L                    3.892e+00  5.797e-02  67.142  < 2e-16 ***
+## decile.Q                    5.400e-01  5.605e-02   9.634  < 2e-16 ***
+## decile.C                    4.361e-01  5.192e-02   8.400 8.96e-15 ***
+## decile^4                   -1.341e-01  4.886e-02  -2.745  0.00662 ** 
+## decile^5                   -2.553e-02  4.779e-02  -0.534  0.59385    
+## decile^6                   -1.002e-01  4.731e-02  -2.118  0.03545 *  
+## decile^7                   -7.227e-02  4.808e-02  -1.503  0.13438    
+## decile^8                   -2.164e-02  4.777e-02  -0.453  0.65104    
+## decile^9                   -3.907e-03  4.789e-02  -0.082  0.93506    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.2174 on 196 degrees of freedom
+## Multiple R-squared:  0.9787,	Adjusted R-squared:  0.9769 
+## F-statistic: 561.9 on 16 and 196 DF,  p-value: < 2.2e-16
 ```
 
 The equation above throws extra information at the engineering estimate and tries to predict the low qualifying bid. If the result is noticably closer to the low qualifying bid than the original estiamte, you can use the delta as a post-estimation fudge factor to adjust your final estimate.
@@ -315,9 +339,15 @@ I'll build a table near the very end of this script that summarize the metrics I
 What is the summary of the predicted values? 
 How does it compare to the summary of low bids? 
 
-```{r, echo=FALSE, message = FALSE, warning = FALSE}
-summary(base$fitted.values) 
-summary(train$Low.Bid) 
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   13.04   14.07   14.66   15.05   15.88   20.37
+```
+
+```
+##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+##     97300   1298005   2542996  12507353   6956000 451841280
 ```
 
 Looking at the two summaries above, what's more accurate, the original engineering estimate or the first enhanced prediction? Neither, really. In fact the estimate and prediction aren't even (statistically) significantly different. Maybe something more robust can come with a little creativity. 
@@ -341,29 +371,123 @@ The package I'm using, glmnet, requires a little extra preparation.
 
 The output below represents the algorithm's effort to look for variatbles that might be dependable in adding predictive power to the original engineering estimate. 
 
-```{r, echo=FALSE, message = FALSE, warning = FALSE}
-names(train) 
-train2 = train[,-c(1:4,7:10,12,14,52)] 
-  train2 = na.omit(train2) 
-test2 = test[,-c(1:4,7:10,12,14,52)] 
 
-XP=data.matrix(train2) #XP=data.matrix(train2[,-3]) 
-YP=data.matrix(log(train$Low.Bid))
-lasso=cv.glmnet(x=XP, y=YP, alpha=.25, #nfolds=10, 
-                 standardize=TRUE, family="gaussian") #type.measure="mse",
+```
+##  [1] "Q"                                            
+##  [2] "Proj"                                         
+##  [3] "Proj.Name"                                    
+##  [4] "Date"                                         
+##  [5] "Format"                                       
+##  [6] "Engr.Est"                                     
+##  [7] "Low.Bid"                                      
+##  [8] "Var"                                          
+##  [9] "Result"                                       
+## [10] "Bids"                                         
+## [11] "Loc"                                          
+## [12] "Qtr"                                          
+## [13] "LD"                                           
+## [14] "Lead"                                         
+## [15] "Typeology"                                    
+## [16] "Consumer.price.index"                         
+## [17] "Employment.in.communications"                 
+## [18] "Employment.in.construction"                   
+## [19] "Employment.in.education.and.health"           
+## [20] "Employment.in.financial.and.business.services"
+## [21] "Employment.in.financial.services"             
+## [22] "Employment.in.government"                     
+## [23] "Employment.in.other.services"                 
+## [24] "Employment.in.production.industries"          
+## [25] "Employment.in.professional.services"          
+## [26] "Employment.in.real.estate"                    
+## [27] "Employment.in.retail"                         
+## [28] "Employment.in.transport.services"             
+## [29] "Employment.in.wholesale"                      
+## [30] "Output.in.communications"                     
+## [31] "Output.in.construction"                       
+## [32] "Output.in.financial.services"                 
+## [33] "Output.in.government"                         
+## [34] "Output.in.retail"                             
+## [35] "Output.in.education.and.health"               
+## [36] "Output.in.financial.and.business.services"    
+## [37] "Output.in.other.services"                     
+## [38] "Output.in.production.industries"              
+## [39] "Output.in.professional.services"              
+## [40] "Output.in.real.estate"                        
+## [41] "Output.in.transport.services"                 
+## [42] "Output.in.wholesale"                          
+## [43] "Personal.disposable.income..nominal"          
+## [44] "Personal.disposable.income..real"             
+## [45] "Personal.income..nominal"                     
+## [46] "Retail.sales..nominal"                        
+## [47] "Retail.sales..real"                           
+## [48] "Total.employment"                             
+## [49] "Total.office.based.employment"                
+## [50] "Total.output"                                 
+## [51] "Total.population"                             
+## [52] "permits"                                      
+## [53] "permits_1"                                    
+## [54] "cci"                                          
+## [55] "decile"
+```
 
-plot(lasso) 
-coef(lasso, s=lasso$lambda.1se) 
-#coef(lasso, s=lasso$lambda.min) 
-#coef(lasso, s=mean(c(lasso$lambda.1se, lasso$lambda.min))) 
-#coef(lasso, s=0) 
+![](Construction_bids7_files/figure-latex/unnamed-chunk-23-1.pdf)<!-- --> 
+
+```
+## 45 x 1 sparse Matrix of class "dgCMatrix"
+##                                                                1
+## (Intercept)                                   13.104229586130819
+## Format                                         .                
+## Engr.Est                                       0.000000008161281
+## Loc                                            .                
+## LD                                             .                
+## Typeology                                      .                
+## Consumer.price.index                           .                
+## Employment.in.communications                   .                
+## Employment.in.construction                     .                
+## Employment.in.education.and.health             .                
+## Employment.in.financial.and.business.services  .                
+## Employment.in.financial.services               .                
+## Employment.in.government                       .                
+## Employment.in.other.services                   .                
+## Employment.in.production.industries            .                
+## Employment.in.professional.services            .                
+## Employment.in.real.estate                      .                
+## Employment.in.retail                           .                
+## Employment.in.transport.services               .                
+## Employment.in.wholesale                        .                
+## Output.in.communications                       .                
+## Output.in.construction                         .                
+## Output.in.financial.services                   .                
+## Output.in.government                           .                
+## Output.in.retail                               .                
+## Output.in.education.and.health                 .                
+## Output.in.financial.and.business.services      .                
+## Output.in.other.services                       .                
+## Output.in.production.industries                .                
+## Output.in.professional.services                .                
+## Output.in.real.estate                          .                
+## Output.in.transport.services                   .                
+## Output.in.wholesale                            .                
+## Personal.disposable.income..nominal            .                
+## Personal.disposable.income..real               .                
+## Personal.income..nominal                       .                
+## Retail.sales..nominal                          .                
+## Retail.sales..real                             .                
+## Total.employment                               .                
+## Total.office.based.employment                  .                
+## Total.output                                   .                
+## Total.population                               .                
+## permits_1                                      .                
+## cci                                            .                
+## decile                                         0.336859651066883
 ```
 
 ISL suggests "a large value of s corresponds to [lambda]=0 ... if s is sufficiently large, .... the ... estimates will be the same as the least squares estimates." 
 
 The algorithm suggests using anything beyond the engineer's estimate itself to better predict the lowest qualifying good adds more uncertainty (in the form of noise that's tough to explain) than it adds value. (The "penalty" associated with adding variables is greater than the extra predictive power they bring.) The exception is project size, and that would provide a chance to look closer. 
 
-```{r}
+
+```r
   options(scipen=999)
   estimate_c = lasso$fitted.values #predict(compare,train2) 
   mse_c = round(mse(test$Low.Bid,lasso$fitted.values),0)
@@ -389,20 +513,12 @@ How can we be estimating the value that well, on average? The model must be opti
 
 But this is a question for another time. For now I'll just need to lean on other metrics as indications of accuracy: 
 
-```{r echo=FALSE}
-accuracy_a = cor(train$Engr.Est,train$Low.Bid) 
-accuracy_b = cor(base$fitted.values,train$Low.Bid) 
-#accuracy_c = cor(lasso$fitted.values,train$Low.Bid) 
-```
+
 
 Well, the correlations between estimates and actuals do show signals of tightening up slightly. But how robust is this, really? Are the numbers really different? And how would the two models perform on fresh data? 
 
 ##Compare new estimates to original estimates.
-```{r echo=FALSE}
-ttest_a = "NA" 
-ttest_b = t.test(base$fitted.values,train$Engr.Est)$p.value
-#ttest_c = t.test(compare$fitted.values,train$Engr.Est)$p.value
-```
+
 No statistically significance differences to be found in either case.
 
 #Validate
@@ -410,44 +526,15 @@ No statistically significance differences to be found in either case.
 
 We've already got the models (both of them): "base" and "compare".
 
-```{r, echo=FALSE, message = FALSE, warning = FALSE}
-test_accuracy_a = cor(test$Low.Bid,test$Engr.Est) 
 
-base2 = lm(log(Low.Bid) ~ Engr.Est + Employment.in.construction + permits_1 + cci, data = test) 
-
-  options(scipen=999)
-  estimate_b2 = base2$fitted.values #predict(compare,train2) 
-  test_mse_b = round(mse(test$Low.Bid,base2$fitted.values),0)
-  test_accuracy_b = cor(test$Low.Bid,base2$fitted.values) 
-  test_adjr_b = round(summary(base2)$adj.r.squared,3)
-  test_ttest_b = t.test(base2$fitted.values,test$Engr.Est)$p.value
-```
 
 Results for the broader model: 
 
-```{r echo=FALSE}
-#compare2 = lm(Low.Bid ~ ., data=test2) 
-#  estimate_c2 = compare2$fitted.values #predict(compare,train2) 
-#  t.test(estimate_c2,test2$Engr.Est) 
-#  test_mse_c = round(mse(test2$Low.Bid,estimate_c2),0)
-#  test_accuracy_c = cor(test2$Low.Bid,compare2$fitted.values) 
-#  test_adjr_c = round(summary(compare2)$adj.r.squared,3)
-#  test_ttest_c = t.test(compare2$fitted.values,test2$Engr.Est)$p.value
-```
+
 
 
 #Compare
-```{r echo=FALSE, message = FALSE, warning = FALSE}
-#table_1 = c("none","base","lasso") 
-#table_2 = c("NA",round(ttest_b,3),round(ttest_c,3)) 
-#table_3 = c(round(accuracy_a,3),round(accuracy_b,3),round(accuracy_c,3)) 
-#table_4 = c("NA",adjr_b,adjr_c) 
-#table_5 = c("NA",formatC(mse_b, big.mark=","),formatC(mse_c, big.mark=",")) 
-#table_6 = c("NA",round(test_ttest_b,3),round(test_ttest_c,3))
-#table_7 = c(round(test_accuracy_a,3),round(test_accuracy_b,3),round(test_accuracy_c,3))
-#table_8 = c("NA",round(test_adjr_b,3),round(test_adjr_c,3))
-#table_9 = c("NA",formatC(test_mse_b, big.mark=","),formatC(test_mse_c, big.mark=","))
-```
+
 
 This is a table comparing performance of: 
 1. The raw estimates, 
@@ -456,24 +543,16 @@ This is a table comparing performance of:
 along some key measures. The p-values (below 0.1 is strong) and correlation (closer to 1 is strong) can be considered discretely for the two models (and, for correlation, the raw estimate), as they reflect how strongly predicted bids and actual bids are related, and the adjusted R-squared (closest to 1 is best) and mean squared error (MSE; lower is best) data points offer technical insight into how well each model performs ... 
 
 For the training exercise (data from 2015-Q1 2019): 
-```{r echo=FALSE}
-#results_train = as.data.frame(cbind(table_1,table_2,table_3,table_4,
-#                      table_5));
-#names(results_train) = c("model","p-value","cor","adj-R2","MSE")  
-#results_test = as.data.frame(cbind(table_1,table_6,table_7,table_8,table_9));
-#names(results_test) = c("model","test_p-value","test_cor","test_adj-R2","test_MSE") 
-#rm(table_1,table_2,table_3,table_4,table_5,table_6,table_7,table_8,table_9) 
-```
+
 
 Results: 
-```{r}
+
+```r
 #t(results_train) 
 ```
 
 For the test (data withheld, from Q2 and Q3 2019): 
-```{r echo=FALSE}
-#t(results_test) 
-```
+
 
 # Discussion. 
 The model we selected myself doesn't do much better than the engineer's estimate. And the model with automated variable selection via lasso doesn't really do any better than the one by hand. 
