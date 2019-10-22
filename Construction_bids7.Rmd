@@ -1,16 +1,20 @@
 ---
 title: "Predicting costs"
 author: "Chris Eshleman"
-date: "10/13/2019"
+date: "10/20/2019"
 output:
   pdf_document:
     latex_engine: xelatex
+  html_document:
+    df_print: paged
   word_document: default
 ---
 
 \pagenumbering{arabic}
 
-ROW 130 TRY AND READ CCI INDEX IN THERE CORRECTLY 
+Q: What's the cross-validation being used? 
+Q: Can I relax the penalty I'm applying via lasso? YES - THERE'S 
+SOMETHING TO THIS - Flesh it out! 
 
 The agency estimates project costs internally. It may be able to use statistics to improve those predictions. 
 
@@ -47,8 +51,8 @@ library(broom)
 library(tidytext) 
 library(widyr) 
 library(Matrix) 
+library(ggrepel) 
 library(MLmetrics) 
-#install.packages("mltools", repos = "http://cran.us.r-project.org") 
 library(mltools) 
 ```
 
@@ -65,7 +69,7 @@ The measures of "accuracy" are, for now, bivariate correlation. We discuss below
 Data comes from a few sources and needs to be merged. Two usual suspects are the agency's internal project information and a set of economic indicators specific to Greater New York (18 counties on both sides of the Hudson River). 
 
 ```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
-#setwd("C:/Users/ceshleman/Dropbox/Work and research/Port Authority/Construction_git") 
+#setwd("C:/Users/ceshleman/Dropbox/Work and research/Port Authority/construction_bids")
 setwd("~/Dropbox/Work and research/Port Authority/construction_bids") 
 bids = read.csv("./Bid data 2019q3.csv") 
 bids$Year = as.factor(bids$Year) 
@@ -77,7 +81,11 @@ bids$Engr.Est = as.numeric(bids$Engr.Est)
 bids$Quarter = quarter(bids$Date) 
 bids$Quarter = paste("Q",quarter(bids$Date), sep="") 
 bids$Q = paste(bids$Year,bids$Quarter,sep="-") 
+```
 
+Add economic data. 
+
+```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
 econ = read.csv("./Economics 2019Q2.csv") 
 econ$Q = paste(econ$Year,econ$Quarter,sep="-")
 
@@ -105,38 +113,31 @@ permits_short = read.csv("./Permits_short.csv")
 names(permits_short) 
 permits_short$X=NULL 
 names(permits_short) = c("Q","permits","permits_1") 
+
 bids = merge(bids, permits_short, by = "Q", all.x=TRUE) 
 rm(permits_short) 
-
-steel = read.csv(url("https://fred.stlouisfed.org/graph/fredgraph.csv?bgcolor=%23e1e9f0&chart_type=line&drp=0&fo=open%20sans&graph_bgcolor=%23ffffff&height=450&mode=fred&recession_bars=on&txtcolor=%23444444&ts=12&tts=12&width=748&nt=0&thu=0&trc=0&show_legend=yes&show_axis_titles=yes&show_tooltip=yes&id=WPU101707&scale=left&cosd=1982-06-01&coed=2019-08-01&line_color=%234572a7&link_values=false&line_style=solid&mark_type=none&mw=3&lw=2&ost=-99999&oet=99999&mma=0&fml=a&fq=Monthly&fam=avg&fgst=lin&fgsnd=2009-06-01&line_index=1&transformation=lin&vintage_date=2019-09-29&revision_date=2019-09-29&nd=1982-06-01")) 
-
-names(steel) = tolower(names(steel)) 
-steel$date = as.Date(steel$date, format="%Y-%m-%d") 
-
-names(steel) = trimws(names(steel)) 
-steel$Quarter = paste("Q",quarter(steel$date), sep="") 
-steel$month = month(steel$date) 
-steel = subset(steel,steel$month==2 | steel$month==5 | steel$month==8 | steel$month==11) 
-steel$month=NULL 
-steel$Q = paste(year(steel$date),steel$Quarter,sep="-") 
-steel = data.frame(steel$wpu101707,steel$Q) #WPU101707 
-names(steel) = c("steel","Q") 
-
-bids = merge(bids, steel, by = "Q", all.x=TRUE) 
-rm(steel) 
 ``` 
 
-The Engineering News-Record tracks and aggregates construction cost data through an index. I'll probably use that to cover prices. 
+The Engineering News-Record tracks and aggregates construction cost data through an index. Use that to cover prices. 
+
 ```{r}
-cci = read.csv("./cci.csv")
+cci = read.csv("./cci.csv") 
 names(cci) = tolower(names(cci)) 
 cci$avg. = NULL 
 cci = gather(cci, month, cci, jan:dec, factor_key=TRUE) 
-cci$m = gsub("(^[[:alpha:]])", "\\U\\1", cci$month, perl=TRUE)
-cci$mm = month.abb[cci$m] 
-cci$m = as.Date(cci$m, format="%b") #%b
-#month.abb 
-head(cci) 
+cci$month = gsub("(^[[:alpha:]])", "\\U\\1", cci$month, perl=TRUE)
+cci$month = as.Date(paste(cci$month,"01",cci$year, sep="-"), format="%b-%d-%Y") 
+cci = cci[month(cci$month) == 2 | month(cci$month) == 5 | month(cci$month) == 8 | month(cci$month) == 11, ] 
+
+cci$Quarter = paste("Q",quarter(cci$month), sep="") 
+cci$Q = paste(year(cci$month),cci$Quarter,sep="-") 
+cci$Quarter = NULL 
+cci$month = NULL 
+cci$year=NULL 
+
+bids = merge(bids, cci, by = "Q", all.x=TRUE) 
+
+rm(cci) 
 ```
 
 
@@ -169,14 +170,23 @@ From here on we'll define "accuracy" as the ratio of dollars estimated over doll
 
 ```{r echo=FALSE}
 bids$accuracy = bids$Engr.Est / bids$Low.Bid 
-bid = bids # backup my data frame 
 ```
 
-I think there's a pesky outlier in there - a project that, for a strange reason (unexplainable), was way off. We suggest removing it. 
+I think there's a pesky outlier in there - a project that, for a strange reason (unexplainable), was way off. Suggest removing it. 
 
 ```{r echo=FALSE}
-plot(bids$accuracy) 
 bids = subset(bids,bids$accuracy<3) # remove major outliers 
+```
+
+We may want to think of project size categorically. 
+```{r}
+bids$decile = decile(vector = bids$Low.Bid) 
+bids$decile = ordered(bids$decile, levels = 1:10)
+```
+
+Back up data. 
+```{r}
+bid = bids # backup my data frame 
 ```
 
 
@@ -193,13 +203,16 @@ test = subset(bids,bids$Date>="2019-04-01")
 Why do we think developing a conrolled multivariate (complicated) model will be worth it? Well, the average gap is $2.5 million, or 20%, off of our estimates. What's the raw (uncontrolled) bivariate relationship between engineering estimates and low bids? 
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
-ggplot(bids, aes(x=log(Low.Bid), y=log(Engr.Est))) + geom_point(size=2,shape=1)
+a = round(cor(bids$Low.Bid, bids$Engr.Est),5) 
+ggplot(bids, aes(x=log(Low.Bid), y=log(Engr.Est))) + geom_point(size=2,shape=1) + annotate(geom="text", x=12, y=19, label=a, #"Scatter plot"
+              color="red")
+
 summary(lm(bids$Low.Bid ~ bids$Engr.Est)) 
 ```
 
 (The logarithm is just to distribute it across the plot (one of the observations is an outlier).) 
 
-The in-house engineers arguably do a pretty good job - they're guesses predict more than 97% of the variation in low bids. 
+The in-house engineers arguably do a pretty good job - they're guesses predict more than 98% of the variation in low bids. 
 
 Some of the remaining variation can be explained with some guesswork. 
 
@@ -208,38 +221,46 @@ Basically, projects that somehow span the Hudson River wind up costing more, on 
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 summary(lm(bids$accuracy ~ bids$Loc)) 
-ggplot(bids, aes(x=Loc, y=accuracy)) + 
-  geom_boxplot(outlier.shape=NA) + #avoid plotting outliers twice
-  geom_jitter(size=.8,position=position_jitter(width=.1, height=0), aes(color = Loc)) +   theme(legend.position="none") 
-```
 
-There's a weak (like very weak) signal that projects that are in the middle of the pack in terms of size (in dollar terms) may be more evasive than much larger or smaller projects. What's the relationship between low bids and accuracy, when we start considering the size of low bids? 
-
-```{r, echo = FALSE, message = FALSE, warning = FALSE}
-bids$decile = decile(vector = bids$Low.Bid) 
-summary(lm(bids$accuracy ~ as.factor(bids$decile))) 
-
-ggplot(bids, aes(x=as.factor(decile), y=accuracy)) + 
-  geom_boxplot(outlier.shape=NA) + #avoid plotting outliers twice
-  geom_jitter(size=.8,position=position_jitter(width=.1, height=0), aes(color = as.factor(decile))) +  
-  theme(legend.position="none") + 
-  stat_summary(fun.y = "mean", geom = "col") + 
-  stat_summary(fun.data = mean_sdl, geom = "errorbar", width = .5, fun.args = list(mult = 1))
-
-ggplot(bids, aes(x = as.factor(decile), y = accuracy)) + 
+ggplot(bids, aes(x = Loc, y = accuracy)) + 
   stat_summary(fun.y = "mean", geom = "col") + 
   stat_summary(fun.data = mean_sdl, geom = "errorbar", width = .5, fun.args = list(mult = 1)) + 
-  geom_jitter(size=.8,position=position_jitter(width=.1, height=0), aes(color = as.factor(decile))) 
+  geom_jitter(size=.8,position=position_jitter(width=.1, height=0), aes(color = Loc)) + 
+  theme(legend.position="none") 
 ```
+
 
 The signal is stronger regarding the type of project, which has an identifiable (if yet uncontrolled) relationship with estimating accuracy. What's the raw (uncontrolled) relationship between estimation accuracy and the type of project? 
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 summary(lm(bids$accuracy ~ as.factor(bids$Typeology))) 
-ggplot(bids, aes(x=Typeology, y=accuracy)) + 
-  geom_boxplot(outlier.shape=NA) + #avoid plotting outliers twice
-  geom_jitter(size=.8,position=position_jitter(width=.1, height=0), aes(color = Typeology)) + 
+
+ggplot(bids, aes(x = Typeology, y = accuracy)) + 
+  stat_summary(fun.y = "mean", geom = "col") + 
+  stat_summary(fun.data = mean_sdl, geom = "errorbar", width = .5, fun.args = list(mult = 1)) + 
+  geom_jitter(size=.8,position=position_jitter(width=.1, height=0), aes(color = as.factor(decile))) + 
   theme(legend.position="none") 
+```
+
+We see signals that projects of medium size (in dollar terms) may be less evasive than much larger or smaller projects. What's the relationship between low bids and accuracy, when we start considering the size of low bids? 
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+summary(lm(bids$accuracy ~ as.factor(bids$decile))) 
+
+ggplot(bids, aes(x = as.factor(decile), y = accuracy)) + 
+  stat_summary(fun.y = "mean", geom = "col") + 
+  stat_summary(fun.data = mean_sdl, geom = "errorbar", width = .5, fun.args = list(mult = 1)) + 
+  geom_jitter(size=.8,position=position_jitter(width=.1, height=0), aes(color = as.factor(decile))) + 
+  theme(legend.position="none") 
+```
+
+```{r}
+ggplot(bids, aes(x = as.factor(decile), y = accuracy)) + 
+  stat_summary(fun.y = "mean", geom = "col") + 
+  stat_summary(fun.data = mean_sdl, geom = "errorbar", width = .5, fun.args = list(mult = 1)) + 
+  geom_jitter(size=.8,position=position_jitter(width=.1, height=0), aes(color = as.factor(decile))) + 
+  theme(legend.position="none") + 
+  facet_wrap( ~ Typeology, ncol=1)
 ```
 
 Visualizing and testing the data iteratively like this has offered some initial insight into what might be accounting for variation in accuracy. 
@@ -257,10 +278,16 @@ Note: ensure the "accuracy" variable we calculated earlier is dropped before mod
 
 Note 2: when a number appears in the output without context, it is likely an information criterion (and AIC), which may or may not provide value post-modeling. 
 
-```{r, echo=FALSE, message = FALSE, warning = FALSE}
+First remove accuracy. 
+```{r}
 train$accuracy=NULL 
 test$accuracy=NULL 
-base = lm(Low.Bid ~ Engr.Est + Employment.in.construction + permits_1 + steel, data = train) 
+```
+
+Run model. 
+
+```{r, echo=FALSE, message = FALSE, warning = FALSE}
+base = lm(log(Low.Bid) ~ Engr.Est + Employment.in.construction + Format + Typeology + permits_1 + cci + decile, data = train) 
 
   summary(base) 
   options(scipen=999)
@@ -268,8 +295,7 @@ base = lm(Low.Bid ~ Engr.Est + Employment.in.construction + permits_1 + steel, d
   adjr_b = round(summary(base)$adj.r.squared,3)
 ```
 
-The equation above throws extra information at the engineering estimate and tries to 
-predict the low qualifying bid. If the result is noticably closer to the low qualifying bid than the original estiamte, you can use the delta as a post-estimation fudge factor to adjust your final estimate.
+The equation above throws extra information at the engineering estimate and tries to predict the low qualifying bid. If the result is noticably closer to the low qualifying bid than the original estiamte, you can use the delta as a post-estimation fudge factor to adjust your final estimate.
 
 The numbers calculated above include a few metrics to use in comparing the three estimates against the objective data point at the low bid, which is what we're trying to predict. Ghose three estimates I'm talking about are: 
   1. The original, raw engineering cost estimate,
@@ -293,35 +319,51 @@ Looking at the two summaries above, what's more accurate, the original engineeri
 
 (Note: the model should control to prevent negative values. To be done next time.)
 
+It might have been worth trying with the log of prices, only because the statistical fit becomes multiplicative instead of linear, but that produced similar results. 
 
-## B. Machine learning
+
+## B. Stepwise selection 
+
+Do a backward stepwise selection only because early runs indicate there's little room to add much predictive power, so recognize that the default process backward will favor leaving variables in more than forward. 
+
+COMING SOON. 
+
+
+
+## C. Machine learning
 Strip the bids data of unusable stuff, then set controls and run.
 The package I'm using, glmnet, requires a little extra preparation.
 
 The output below represents the algorithm's effort to look for variatbles that might be dependable in adding predictive power to the original engineering estimate. 
 
 ```{r, echo=FALSE, message = FALSE, warning = FALSE}
-train2 = train[,-c(1:5,8:10,12,14,52,56)] 
-test2 = test[,-c(1:5,8:10,12,14,52,56)] 
+train2 = train[,-c(1:4,8:10,12,14,52)] 
+  train2 = na.omit(train2) 
+test2 = test[,-c(1:4,8:10,12,14,52)] 
 
-compare = lm(Low.Bid ~ ., data=train2) 
-
-XP=data.matrix(train2)  #XP=data.matrix(train2[,-3])
-YP=data.matrix(train2$Low.Bid) 
+XP=data.matrix(train2) #XP=data.matrix(train2[,-3]) 
+YP=data.matrix(log(train2$Low.Bid))
 lasso=cv.glmnet(x=XP, y=YP, alpha=1, nfolds=30, 
-                type.measure="mse", standardize=TRUE) #family="gaussian"
+                type.measure="mse", standardize=TRUE) #family="gaussian" 
 
 plot(lasso) 
 coef(lasso, s=lasso$lambda.1se) 
 coef(lasso, s=lasso$lambda.min) 
 ```
 
-My first cut with machine learning isn't providing any suggestions to improve the model prediction. Basically the algorithm is telling me using anything beyond the engineer's estimate itself to better predict the lowest qualifying good adds more uncertainty (in the form of noise that's tough to explain) than it adds value. (The "penalty" associated with adding variables is greater than the extra predictive power they bring.) 
+ISL suggests "a large value of s corresponds to [lambda]=0 ... if s is sufficiently large, .... the ... estimates will be the same as the least squares estimates." 
 
-```{r, echo=FALSE, message = FALSE, warning = FALSE}
-mse_c = round(mse(test$Low.Bid,compare$fitted.values),0)
-adjr_c = round(summary(compare)$adj.r.squared,3)
+The algorithm suggests using anything beyond the engineer's estimate itself to better predict the lowest qualifying good adds more uncertainty (in the form of noise that's tough to explain) than it adds value. (The "penalty" associated with adding variables is greater than the extra predictive power they bring.) The exception is project size, and that would provide a chance to look closer. 
+
+```{r}
+  options(scipen=999)
+  estimate_c = lasso$fitted.values #predict(compare,train2) 
+  mse_c = round(mse(test$Low.Bid,lasso$fitted.values),0)
+  #accuracy_c = cor(test$Low.Bid,lasso$fitted.values) 
+  #adjr_c = round(summary(lasso)$adj.r.squared,3)
+  #ttest_c = t.test(lasso$fitted.values,test$Engr.Est)$p.value
 ```
+
 
 #Accuracy 
 
@@ -342,7 +384,7 @@ But this is a question for another time. For now I'll just need to lean on other
 ```{r echo=FALSE}
 accuracy_a = cor(train$Engr.Est,train$Low.Bid) 
 accuracy_b = cor(base$fitted.values,train$Low.Bid) 
-accuracy_c = cor(compare$fitted.values,train$Low.Bid) 
+#accuracy_c = cor(lasso$fitted.values,train$Low.Bid) 
 ```
 
 Well, the correlations between estimates and actuals do show signals of tightening up slightly. But how robust is this, really? Are the numbers really different? And how would the two models perform on fresh data? 
@@ -351,18 +393,19 @@ Well, the correlations between estimates and actuals do show signals of tighteni
 ```{r echo=FALSE}
 ttest_a = "NA" 
 ttest_b = t.test(base$fitted.values,train$Engr.Est)$p.value
-ttest_c = t.test(compare$fitted.values,train$Engr.Est)$p.value
+#ttest_c = t.test(compare$fitted.values,train$Engr.Est)$p.value
 ```
-No statistically significance differences to be found in either case. 
+No statistically significance differences to be found in either case.
 
+#Validate
 ##Run on the withheld data and check.
 
-We've already got the models (both of them): "base" and "compare". 
+We've already got the models (both of them): "base" and "compare".
 
 ```{r, echo=FALSE, message = FALSE, warning = FALSE}
 test_accuracy_a = cor(test$Low.Bid,test$Engr.Est) 
 
-base2 = lm(Low.Bid ~ Engr.Est + Employment.in.construction + permits_1 + steel, data = test) 
+base2 = lm(log(Low.Bid) ~ Engr.Est + Employment.in.construction + permits_1 + cci, data = test) 
 
   options(scipen=999)
   estimate_b2 = base2$fitted.values #predict(compare,train2) 
@@ -387,15 +430,15 @@ compare2 = lm(Low.Bid ~ ., data=test2)
 
 #Compare
 ```{r echo=FALSE, message = FALSE, warning = FALSE}
-table_1 = c("none","base","lasso") 
-table_2 = c("NA",round(ttest_b,3),round(ttest_c,3)) 
-table_3 = c(round(accuracy_a,3),round(accuracy_b,3),round(accuracy_c,3)) 
-table_4 = c("NA",adjr_b,adjr_c) 
-table_5 = c("NA",formatC(mse_b, big.mark=","),formatC(mse_c, big.mark=",")) 
-table_6 = c("NA",round(test_ttest_b,3),round(test_ttest_c,3))
-table_7 = c(round(test_accuracy_a,3),round(test_accuracy_b,3),round(test_accuracy_c,3))
-table_8 = c("NA",round(test_adjr_b,3),round(test_adjr_c,3))
-table_9 = c("NA",formatC(test_mse_b, big.mark=","),formatC(test_mse_c, big.mark=","))
+#table_1 = c("none","base","lasso") 
+#table_2 = c("NA",round(ttest_b,3),round(ttest_c,3)) 
+#table_3 = c(round(accuracy_a,3),round(accuracy_b,3),round(accuracy_c,3)) 
+#table_4 = c("NA",adjr_b,adjr_c) 
+#table_5 = c("NA",formatC(mse_b, big.mark=","),formatC(mse_c, big.mark=",")) 
+#table_6 = c("NA",round(test_ttest_b,3),round(test_ttest_c,3))
+#table_7 = c(round(test_accuracy_a,3),round(test_accuracy_b,3),round(test_accuracy_c,3))
+#table_8 = c("NA",round(test_adjr_b,3),round(test_adjr_c,3))
+#table_9 = c("NA",formatC(test_mse_b, big.mark=","),formatC(test_mse_c, big.mark=","))
 ```
 
 This is a table comparing performance of: 
@@ -406,20 +449,35 @@ along some key measures. The p-values (below 0.1 is strong) and correlation (clo
 
 For the training exercise (data from 2015-Q1 2019): 
 ```{r echo=FALSE}
-results_train = as.data.frame(cbind(table_1,table_2,table_3,table_4,
-                      table_5));
-names(results_train) = c("model","p-value","cor","adj-R2","MSE")  
-results_test = as.data.frame(cbind(table_1,table_6,table_7,table_8,table_9));
-names(results_test) = c("model","test_p-value","test_cor","test_adj-R2","test_MSE") 
-rm(table_1,table_2,table_3,table_4,table_5,table_6,table_7,table_8,table_9) 
-#results 
-t(results_train) 
+#results_train = as.data.frame(cbind(table_1,table_2,table_3,table_4,
+#                      table_5));
+#names(results_train) = c("model","p-value","cor","adj-R2","MSE")  
+#results_test = as.data.frame(cbind(table_1,table_6,table_7,table_8,table_9));
+#names(results_test) = c("model","test_p-value","test_cor","test_adj-R2","test_MSE") 
+#rm(table_1,table_2,table_3,table_4,table_5,table_6,table_7,table_8,table_9) 
+```
+
+Results: 
+```{r}
+#t(results_train) 
 ```
 
 For the test (data withheld, from Q2 and Q3 2019): 
 ```{r echo=FALSE}
-t(results_test) 
+#t(results_test) 
 ```
 
 # Discussion. 
-The model we selected myself doesn't do much better than the engineer's estimate. And the model with automated variable selection via LASSO doesn't really do any better than the one by hand.
+The model we selected myself doesn't do much better than the engineer's estimate. And the model with automated variable selection via lasso doesn't really do any better than the one by hand. 
+
+The big insight here seems to be the impact project size has on accuracy. 
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+summary(lm(bids$accuracy ~ as.factor(bids$decile))) 
+
+ggplot(bids, aes(x = as.factor(decile), y = accuracy)) + 
+  stat_summary(fun.y = "mean", geom = "col") + 
+  stat_summary(fun.data = mean_sdl, geom = "errorbar", width = .5, fun.args = list(mult = 1)) + 
+  geom_jitter(size=.8,position=position_jitter(width=.1, height=0), aes(color = as.factor(decile))) + 
+  theme(legend.position="none")
+```
