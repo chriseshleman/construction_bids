@@ -47,10 +47,6 @@ library(MLmetrics)
 library(mltools) 
 ```
 
-```{r, echo=FALSE, include=TRUE}
-#![Here's what we have in mind.](Estimator_Data.png)
-```
-
 The goal is to bridge exploration of the agency's data with potential exogenous predictors, some of which the internal estimation process may underestimate or inadvertently miss. If those predictors can add measurable value to the agency's cost estimation methods it may inform potential changes in methodology. 
 
 
@@ -85,6 +81,8 @@ rm(econ)
 ```
 
 Construction data is better from some parts of the region than others, but Jersey City's construction data is not yet as dependable as the City of New York's. NYC dominates regional construction anyway and it's justifiable for now to use its permitting data as a representative for the broader regional construction market. 
+
+![Project map](Estimator_Data.png) 
 
 Prices of construction materials and labor already figure directly into the agency's internal cost estimation, and this analysis borrows the same index for predictive powers now despite uncertainty regarding whether its implicit presence in agency estimates helps or hurts its role in any multivariable considerations.  It is likely of second-order importance for now. 
 
@@ -320,7 +318,7 @@ summary(lm(bids$Second.Bid ~ bids$Engr.Est + bids$quantile_2 + bids$quantile_3 +
              bids$quantile_8 + bids$quantile_9 + bids$quantile_10)) 
 ```
 
-
+\pagebreak
 
 #Exploratory work.
 
