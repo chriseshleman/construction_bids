@@ -163,13 +163,13 @@ Why might developing a conrolled multivariate model will be worth it? The averag
 weighted.mean((bids$Second.Bid/bids$Engr.Est), bids$Engr.Est, na.rm = TRUE)
 sum(bids$Second.Bid-bids$Engr.Est)/nrow(bids) 
 mean(bids$Second.Bid) 
+a = round(cor(bids$Second.Bid, bids$Engr.Est),5) 
+summary(lm(bids$Second.Bid ~ bids$Engr.Est)) 
 ```
 
 How much inconsistency does that represent? 
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
-a = round(cor(bids$Second.Bid, bids$Engr.Est),5) 
-summary(lm(bids$Second.Bid ~ bids$Engr.Est)) 
 ggplot(bids, aes(x=log(Second.Bid), y=log(Engr.Est))) + geom_point(size=2,shape=1) + 
   annotate(geom="text", x=12.5, y=19.5, label="Correlation", #"Scatter plot"
               color="red") +
@@ -250,21 +250,26 @@ I'll build a table near the very end of this script that summarize the metrics I
   B. A correlation between the two numbers, to try and understand the magnitude of that difference (if we can trust it really exists), 
   C. Two measures of the predictive modeling power of the models, an adjusted R-squared and the mean squared error (MSE). Both are common metrics of power. The first can be viewed discretely for each model but the second only provides a relative measure between models.
 
-What is the summary of the predicted values?
-How does it compare to the summary of low bids?
+What is the summary of the predicted values? How does it compare to the summary of second-lowest bids?
 
-```{r, echo=FALSE, message = FALSE, warning = FALSE}
+```{r, echo=FALSE, include=FALSE, message = FALSE, warning = FALSE}
 summary(base$fitted.values) 
 summary(train$Second.Bid) 
 ```
 
-Looking at the two summaries above, what's more accurate, the original engineering estimate or the first enhanced prediction? Neither, really. In fact the estimate and prediction aren't even (statistically) significantly different. Maybe something more robust can come with a little creativity. 
+Looking at the two summaries above, what's more accurate, the original engineering estimate or the first enhanced prediction? Neither, really. In fact the estimate and prediction aren't even (statistically) significantly different: 
+
+```{r, echo=FALSE,include=TRUE}
+summary(lm(base$fitted.values ~ train$Second.Bid))
+```
+
+Maybe something more robust can come with a little creativity. 
 
 (Note: the model should control to prevent negative values. To be done next time.)
 
 It might have been worth trying with the log of prices, only because the statistical fit becomes multiplicative instead of linear, but that produced similar results.
 
-## 4b. Regularization.
+##4b. Regularization.
 Strip the bids data of unusable stuff, then set controls and run.
 The package I'm using, glmnet, requires a little extra preparation.
 
@@ -272,7 +277,7 @@ Could running a regularization process weed out weaker variables and identify on
 
 Running a regularized regression below adopts base assumptions in the modeling software package (10 folds, standardized coefficients, gaussian distribution, MSE evaluation metric, et cetera). 
 
-```{r, echo=TRUE, include=FALSE, message = FALSE, warning = FALSE}
+```{r, echo=FALSE, include=FALSE, message = FALSE, warning = FALSE}
 train2 = train[,-c(1:5,7:10,12,14,16,53)] 
   train2 = na.omit(train2) 
 test2 = test[,-c(1:5,7:10,12,14,16,53)] 
@@ -285,35 +290,43 @@ lasso=cv.glmnet(x=XP, y=YP, alpha=1)
 
 How many variables survive the penalty process as the penalty grows? 
 
-```{r, echo=TRUE}
+```{r, echo=FALSE}
 plot(lasso) 
 ```
 
 At a lower penalty (higher tuning parameter) there are a dozen non-zero predictors remaining, once the parameter cranks up a little all but one or two fall away. 
 
-```{r, echo=FALSE, include=TRUE}
+```{r, echo=FALSE, include=FALSE}
 coef(lasso, s=lasso$lambda.1se) 
 ```
 
-Re-try with a blended penalty that allows more leash before a covariate is eliminated. A little fine-tuning identifies the two parameters that survive as the model gets further from ordinary least squares: 
+Initial attempt supresses all covariates. A little fine-tuning identifies the two parameters that survive as the model gets further from ordinary least squares without disappearing: 
 
-```{r, echo=FALSE, include=TRUE}
+```{r, echo=TRUE, include=TRUE}
 lasso2 = cv.glmnet(x=XP, y=YP, alpha=.25) 
 coef(lasso2, s=lasso2$lambda.1se) 
 ```
 
+
+#5. Discussion.
 This suggests using anything beyond the engineer's estimate itself to better predict the lowest qualifying good adds more uncertainty (in the form of noise that's tough to explain) than it adds value. (The "penalty" associated with adding variables is greater than the extra predictive power they bring.) The most obvious exception is project size, which isn't too surprising given the exploratory work done earlier. 
 
-```{r, echo=TRUE, include=TRUE}
+```{r, echo=FALSE, include=TRUE}
 bids = fastDummies::dummy_cols(bids, select_columns = "quantile") 
 bids$quantile = as.factor(bids$quantile) 
+```
+```{r, echo=TRUE, include=TRUE}
 summary(lm(bids$Second.Bid ~ bids$Engr.Est + bids$quantile_2 + bids$quantile_3 + bids$quantile_4 + bids$quantile_5 + bids$quantile_6 + bids$quantile_7 + 
              bids$quantile_8 + bids$quantile_9 + bids$quantile_10)) 
 ```
 
 
-Plots from exploratory bivariate work are below. Each considers a potential predictor's relationship to the agency's cost estimation accuracy, defined here as the second-lowest bid over the internal agency estimate. 
 
+#Exploratory work.
+
+Plots and output from earlier exploratory bivariate work are below. Each considers a potential predictor's relationship to the agency's cost estimation accuracy, defined here as the second-lowest bid over the internal agency estimate. 
+
+###Location.
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 summary(lm(bids$accuracy ~ bids$Loc)) 
 
@@ -326,6 +339,7 @@ ggplot(bids, aes(x = Loc, y = accuracy)) + #, shape = Loc)) +
     theme(axis.title.y=element_text(size=10))
 ```
 
+###Bidding process.
 ```{r, echo=FALSE}
 summary(lm(bids$accuracy ~ as.factor(bids$Format))) 
 
@@ -338,6 +352,7 @@ ggplot(bids, aes(x = Format, y = accuracy)) + #, shape = Loc)) +
     theme(axis.title.y=element_text(size=10))
 ```
 
+###Project typeology. 
 ```{r, echo = FALSE}
 summary(lm(bids$accuracy ~ as.factor(bids$Typeology))) 
 
@@ -350,6 +365,7 @@ ggplot(bids, aes(x = Typeology, y = accuracy)) + #, shape = Typeology)) +
     theme(axis.title.y=element_text(size=10))
 ```
 
+###Department.
 ```{r, echo = FALSE}
 summary(lm(bids$accuracy ~ as.factor(bids$LD))) 
 
@@ -362,6 +378,7 @@ ggplot(bids, aes(x = LD, y = accuracy)) + #, shape = Typeology)) +
     theme(axis.title.y=element_text(size=10))
 ```
 
+###Project size.
 ```{r, echo = FALSE}
 summary(lm(bids$accuracy ~ as.factor(bids$quantile))) 
 
