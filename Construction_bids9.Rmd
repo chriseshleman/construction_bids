@@ -12,10 +12,6 @@ output:
 
 \pagenumbering{arabic}
 
-Q: What's the cross-validation being used? 
-Q: Can I relax the penalty I'm applying via lasso? YES - THERE'S 
-SOMETHING TO THIS - Flesh it out! 
-
 The agency estimates project costs internally. It may be able to use statistics to improve those predictions. 
 
 Model variation in bids, withholding the two most recent quarters of observations. Then test those models on the withheld observations. How well do they help with predictions? 
@@ -110,7 +106,6 @@ Prices of construction materials and labor also figure into the agency's interna
 
 ```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
 permits_short = read.csv("./Permits_short.csv") 
-names(permits_short) 
 permits_short$X=NULL 
 names(permits_short) = c("Q","permits","permits_1") 
 
@@ -140,24 +135,11 @@ bids = merge(bids, cci, by = "Q", all.x=TRUE)
 rm(cci) 
 ```
 
-
-#Munge 
-Stats software treats different variables in different ways depending on individal formatting. It's worth taking a look at the data structure. 
-
-I'll need to tell the software to reformat some of the variables, namely the economic indicators. 
-
-```{r, echo=FALSE, include=TRUE, message = FALSE, warning = FALSE}
-bids$Employment.in.construction = as.numeric(as.character(bids$Employment.in.construction)) 
-bids$Output.in.construction = as.numeric(as.character(bids$Output.in.construction)) 
-bids$Total.population = as.numeric(as.character(bids$Total.population)) 
-bids$Total.employment = as.numeric(as.character(bids$Total.employment)) 
-bids$Total.output = as.numeric(as.character(bids$Total.output)) 
-```
-
-One variable of interest is the bidding process. Institutional discussions and earlier modeling suggests the bidding process may influence the bids. Limits placed on the range of bidders, for example, could, on average and holding other things constant, increase the average (and lowest qualifying) bid - this is basic microeconomics. I'll simplify the bidding format variable by making it binary: "public" for projects without significant constraints and "other" for ones, such as projects closed to firms not deemed "small business enterprises," that aren't. 
+One variable of interest is the bidding process. Institutional discussions and earlier modeling suggests the bidding process may influence the bids. Limits placed on the range of bidders, for example, could, on average and holding other things constant, increase the average (and lowest qualifying) bid - this is basic microeconomics. I'll simplify the bidding format variable by making it binary: "public" for projects without significant constraints and "other" for ones, such as projects closed to firms not deemed "small business enterprises," that aren't. First I'll clean it a bit to consolidate near-dupliate categories. 
 
 ```{r echo=FALSE}
-bids$Format = as.factor(ifelse(bids$Format=="Public","Public","Other")) 
+bids$Format = as.factor(ifelse(bids$Format=="Public","Public", ifelse(bids$Format=="D-B"|bids$Format=="M/WBE"|bids$Format=="MBE"|bids$Format=="MBE/WBE"|bids$Format=="MWBE", "M/WBE",ifelse(bids$Format=="SBE","SBE","Other"))))
+bids$Format2 = as.factor(ifelse(bids$Format=="Public","Public","Other")) 
 ```
 
 There's room to also eventually include the names (anonymized is fine) of each project estimator to help modeling. Past work has suggested there isn't major causal variation between estimators — they generally do a pretty equivalent job in estimating bids. But having their names included nonetheless may prove to offer some control value. We can leave that to future modeling. 
@@ -165,23 +147,35 @@ There's room to also eventually include the names (anonymized is fine) of each p
 #Restating objective. 
 
 We want to understand whether and how we might help the agency estimate the actual cost of a project. That's invariably going to be represented by the low qualifying bid, and our starting point is the estimate coming from the Engineering Department. 
-
 From here on we'll define "accuracy" as the ratio of dollars estimated over dollars bid. So a "1" would mean the engineering team nailed it, a "0.94" would mean they estimated 94 cents for every 1 dollar in the low bid, et cetera. 
 
 ```{r echo=FALSE}
-bids$accuracy = bids$Engr.Est / bids$Low.Bid 
+bids$accuracy = bids$Second.Bid / bids$Engr.Est 
 ```
 
-If there are outliers in there - projects that, for an unexplainable reason, was way off, consider removing it. 
-
-```{r echo=FALSE}
-#bids = subset(bids,bids$accuracy<3) # remove major outliers 
-```
+If there are outliers in there - projects that, for an unexplainable reason, was way off, consider removing them. 
 
 We may want to think of project size categorically. 
 ```{r}
-bids$decile = decile(vector = bids$Low.Bid) 
-bids$decile = ordered(bids$decile, levels = 1:10)
+bids = bids %>%
+  mutate(quantile = ntile(as.numeric(Second.Bid), 10))
+bids$quantile = as.factor(bids$quantile) 
+bids$quantile = ordered(bids$quantile, levels = 1:10) 
+```
+
+
+#Munge and back up data
+
+Stats software treats different variables in different ways depending on individal formatting. It's worth taking a look at the data structure. 
+
+I'll need to tell the software to reformat some of the variables, namely the economic indicators. 
+
+```{r, echo=FALSE, include=TRUE, message = FALSE, warning = FALSE}
+bids$Employment.in.construction = as.numeric(as.character(bids$Employment.in.construction)) 
+bids$Output.in.construction = as.numeric(as.character(bids$Output.in.construction))
+bids$Total.population = as.numeric(as.character(bids$Total.population)) 
+bids$Total.employment = as.numeric(as.character(bids$Total.employment)) 
+bids$Total.output = as.numeric(as.character(bids$Total.output)) 
 ```
 
 Back up data. 
@@ -203,39 +197,36 @@ test = subset(bids,bids$Date>="2019-04-01")
 Why do we think developing a conrolled multivariate (complicated) model will be worth it? Well, the average gap is $2.5 million, or 20%, off of our estimates. What's the raw (uncontrolled) bivariate relationship between engineering estimates and low bids? 
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
-a = round(cor(bids$Low.Bid, bids$Engr.Est),5) 
-ggplot(bids, aes(x=log(Low.Bid), y=log(Engr.Est))) + geom_point(size=2,shape=1) + 
-  annotate(geom="text", x=12, y=19.5, label="Correlation", #"Scatter plot"
-              color="red") +
-  annotate(geom="text", x=12, y=19, label=a, #"Scatter plot"
-              color="red")
+a = round(cor(bids$Second.Bid, bids$Engr.Est),5) 
 
-summary(lm(bids$Low.Bid ~ bids$Engr.Est)) 
+summary(lm(bids$Second.Bid ~ bids$Engr.Est)) 
+
+ggplot(bids, aes(x=log(Second.Bid), y=log(Engr.Est))) + geom_point(size=2,shape=1) + 
+  annotate(geom="text", x=12.5, y=19.5, label="Correlation", #"Scatter plot"
+              color="red") +
+  annotate(geom="text", x=12.5, y=19, label=a, #"Scatter plot"
+              color="red")
 ```
 
 (The logarithm treatment is just to distribute it across the plot (one of the observations is an outlier).) 
 
-The in-house engineers' guesses predict more than 98% of the variation in low bids. 
+The in-house engineers' guesses predict more than 98% of the variation in low bids.
 
-Some of the remaining variation can be explained with some guesswork. Calculate summary stats for key variables - this will help later: 
+Some of the remaining variation can be explained with some guesswork. Calculate summary stats to help visualize some obvious potential predictors: 
 
-```{r}
+```{r, include=TRUE}
 loc.summary = aggregate(accuracy ~ Loc, mean, data=na.omit(bids)) 
 type.summary = aggregate(accuracy ~ Typeology, mean, data=na.omit(bids)) 
-dec.summary = aggregate(accuracy ~ decile, mean, data=na.omit(bids)) 
+format.summary = aggregate(accuracy ~ Format, mean, data=na.omit(bids)) 
+decile.summary = aggregate(accuracy ~ quantile, mean, data=na.omit(bids)) 
+ld.summary = aggregate(accuracy ~ LD, mean, data=na.omit(bids)) 
 ```
 
-Location likely has some predictive power that engineers may not be able to capture or fully predict. Basically, projects that span the Hudson River wind up costing more, on average, than ones plunked squarely in either New York or New Jersey. What's the raw (uncontrolled) relationship between bid accuracy and location? 
+Location likely has some predictive power that engineers may not be able to capture or fully predict. Basically, projects that span the Hudson River wind up costing more, on average, than ones plunked squarely in either New York or New Jersey. A bivariate look is an easy clue as to the potential role in a multivariate controlled relationship. Plots for this and subsequent exploratory work is at the end of the document; all consider accuracy, defined here as a ratio of the second-highest bid (a rule-of-thumb target) over the internal agency estimate.
 
-```{r, echo = FALSE, message = FALSE, warning = FALSE}
-summary(lm(bids$accuracy ~ bids$Loc)) 
+- Location may matter: projects that span the Hudson River seem to come in, on average, higher than expected. 
+- The bidding process can be constrained or open, with potential ramifications on the ability to estimate costs. 
 
-ggplot(bids, aes(x = Loc, y = accuracy)) + #, shape = Loc)) +  
-    geom_hline(colour="dark gray", yintercept=1) +
-    geom_jitter(width=0.2) +
-    geom_crossbar(data=loc.summary, aes(ymin = accuracy, ymax = accuracy),
-                  size=1,col="red", width = .5) 
-```
 
 
 The signal is stronger regarding the type of project, which has an identifiable (if yet uncontrolled) relationship with estimating accuracy. What's the raw (uncontrolled) relationship between estimation accuracy and the type of project? 
@@ -247,26 +238,44 @@ ggplot(bids, aes(x = Typeology, y = accuracy)) + #, shape = Typeology)) +
     geom_hline(colour="dark gray", yintercept=1) +
     geom_jitter(width=0.2) +
     geom_crossbar(data=type.summary, aes(ymin = accuracy, ymax = accuracy),
-                  size=1,col="red", width = .5)
+                  size=1,col="red", width = .5) + 
+      ylab("Second Bid ÷ Estimate") + 
+    theme(axis.title.y=element_text(size=10))
 ```
+
+The agency can predict paving projects fairly well.
+
+By line department: 
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+summary(lm(bids$accuracy ~ as.factor(bids$LD))) 
+
+ggplot(bids, aes(x = LD, y = accuracy)) + #, shape = Typeology)) +  
+    geom_hline(colour="dark gray", yintercept=1) +
+    geom_jitter(width=0.2) +
+    geom_crossbar(data=ld.summary, aes(ymin = accuracy, ymax = accuracy),
+                  size=1,col="red", width = .5) + 
+      ylab("Second Bid ÷ Estimate") + 
+    theme(axis.title.y=element_text(size=10))
+```
+
+Four obvious outliers, two apiece for PATH and TB&T, push the average accuracy metric up for each, otherwise there's little apparent difference across departments. 
 
 We see signals that projects of medium size (in dollar terms) may be less evasive than much larger or smaller projects. What's the relationship between low bids and accuracy, when we start considering the size of low bids? 
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
-summary(lm(bids$accuracy ~ as.factor(bids$decile))) 
+summary(lm(bids$accuracy ~ as.factor(bids$quantile))) 
 
-ggplot(bids, aes(x = as.factor(decile), y = accuracy)) + 
+ggplot(bids, aes(x = as.factor(quantile), y = accuracy)) + 
     geom_hline(colour="dark gray", yintercept=1) +
     geom_jitter(width=0.2) +
-    geom_crossbar(data=dec.summary, aes(ymin = accuracy, ymax = accuracy),
-                  size=1,col="red", width = .5)
+    geom_crossbar(data=decile.summary, aes(ymin = accuracy, ymax = accuracy),
+                  size=1,col="red", width = .5) + 
+      ylab("Second Bid ÷ Estimate") + 
+    theme(axis.title.y=element_text(size=10))
 ```
 
-Facet by typeology: 
-
-```{r}
-
-```
+These are the most surprising results. I would have expected the largest or smallest projects to be the tough to predict - particularly smaller projects. But it's the projects ranging from the 40th to 70th percentiles that seem to be the most challenging. 
 
 Visualizing and testing the data iteratively like this has offered some initial insight into what might be accounting for variation in accuracy. 
 
@@ -276,12 +285,15 @@ Visualizing and testing the data iteratively like this has offered some initial 
 Try and use exogenous covariates to predict an alternative engineering estimate, without using the low bid information, that might be closer to the low bid. 
 Call it "expected low bid" or something so we can remember what we're trying to get. 
 
+The data set carries dimensionality challenges, with a number of variables (absolutely and relative to the number of observations). It includes mostly continuous variables but also a number of qualitative factors, both ordinal and nominal and all treated categorically without conversion to binary subvariables - the modeling processes used here do that automatically. 
+
+
 ##A. Base model (manual selection) 
-Interpretation: specification was manual and intuitive. 
+Interpretation: specification was manual and intuitive. Given the fact that estimators' already try and take much of this information into account, however, a model with even a handful of extra covariates could represent overfitting - trying to hard. 
 
-Note: ensure the "accuracy" variable we calculated earlier is dropped before modeling or I'll be introducing some dual (reverse) causality, which will confuse the models. 
+Note: ensure the "accuracy" variable calculated earlier is dropped before modeling or introducesome dual (reverse) causality, which could confuse models.
 
-Note 2: when a number appears in the output without context, it is likely an information criterion (and AIC), which may or may not provide value post-modeling. 
+Note 2: when a number appears in the output without context, it is likely an information criterion (and AIC), which may or may not provide value post-modeling.
 
 First remove accuracy. 
 ```{r}
@@ -292,11 +304,11 @@ test$accuracy=NULL
 Run model. 
 
 ```{r, echo=FALSE, message = FALSE, warning = FALSE}
-base = lm(Low.Bid ~ Engr.Est + Employment.in.construction + Format + Typeology + permits_1 + cci + decile, data = train) 
+base = lm(Second.Bid ~ Engr.Est + Employment.in.construction + Format2 + Typeology + permits_1 + cci + quantile, data = train) 
 
-  summary(base) 
   options(scipen=999)
-  mse_b = round(mse(train$Low.Bid,base$fitted.values),0)
+  summary(base) 
+  mse_b = round(mse(train$Second.Bid,base$fitted.values),0)
   adjr_b = round(summary(base)$adj.r.squared,3)
 ```
 
@@ -317,7 +329,7 @@ How does it compare to the summary of low bids?
 
 ```{r, echo=FALSE, message = FALSE, warning = FALSE}
 summary(base$fitted.values) 
-summary(train$Low.Bid) 
+summary(train$Second.Bid) 
 ```
 
 Looking at the two summaries above, what's more accurate, the original engineering estimate or the first enhanced prediction? Neither, really. In fact the estimate and prediction aren't even (statistically) significantly different. Maybe something more robust can come with a little creativity. 
@@ -327,163 +339,78 @@ Looking at the two summaries above, what's more accurate, the original engineeri
 It might have been worth trying with the log of prices, only because the statistical fit becomes multiplicative instead of linear, but that produced similar results. 
 
 
-## B. Stepwise selection 
-
-Do a backward stepwise selection only because early runs indicate there's little room to add much predictive power, so recognize that the default process backward will favor leaving variables in more than forward. 
-
-COMING SOON. 
-
-
-
-## C. Machine learning
+## B. Machine learning
 Strip the bids data of unusable stuff, then set controls and run.
 The package I'm using, glmnet, requires a little extra preparation.
 
-The output below represents the algorithm's effort to look for variatbles that might be dependable in adding predictive power to the original engineering estimate. 
+Could running a regularization process weed out weaker variables and identify one or two items that help prediction? The process would shrink (toward zero) the estimates for covariates that threaten to introduce more uncertainty than predictive power. This chooses a model automatically. 
 
 Running a regularized regression below adopts base assumptions in the modeling software package (10 folds, standardized coefficients, gaussian distribution, MSE evaluation metric, et cetera). 
 
 ```{r, echo=FALSE, message = FALSE, warning = FALSE}
-train2 = train[,-c(1:4,7:10,12,14,52)] 
+train2 = train[,-c(1:5,7:10,12,14,16,53)] 
   train2 = na.omit(train2) 
-test2 = test[,-c(1:4,7:10,12,14,52)] 
+test2 = test[,-c(1:5,7:10,12,14,16,53)] 
 
 XP=data.matrix(train2) #XP=data.matrix(train2[,-3]) 
-YP=data.matrix(train$Low.Bid) 
+YP=data.matrix(train$Second.Bid) 
 set.seed(1) 
-lasso=cv.glmnet(x=XP, y=YP, alpha=.25) 
-
-coef(lasso) 
-lasso$lambda.1se 
-lasso$lambda.min 
-coef(lasso, s=lasso$lambda.1se) 
+lasso=cv.glmnet(x=XP, y=YP, alpha=1) 
 ```
 
 How many variables survive the penalty process as the penalty grows? 
 
 ```{r}
 plot(lasso) 
-coef(lasso, s=lasso$lambda.min) 
-lasso$lambda.min 
+```
+
+At a lower penalty (higher tuning parameter) there are a dozen non-zero predictors remaining, once the parameter cranks up a little all but one or two fall away. 
+
+```{r}
 coef(lasso, s=lasso$lambda.1se) 
-lasso$lambda.1se
 ```
 
-At a logLambda of -3 there are nine non-zero predictors, and at logLambda of -1 only two variables remain. This suggests using anything beyond the engineer's estimate itself to better predict the lowest qualifying good adds more uncertainty (in the form of noise that's tough to explain) than it adds value. (The "penalty" associated with adding variables is greater than the extra predictive power they bring.) The exception is project size, and that would provide a chance to look closer. 
+
+Re-try with a blended penalty that allows more leash before a covariate is eliminated. A little fine-tuning identifies the two parameters that survive as the model gets further from ordinary least squares: 
 
 ```{r}
-  options(scipen=999)
-  estimate_c = lasso$fitted.values #predict(compare,train2) 
-  mse_c = round(mse(test$Low.Bid,lasso$fitted.values),0)
-  #accuracy_c = cor(test$Low.Bid,lasso$fitted.values) 
-  #adjr_c = round(summary(lasso)$adj.r.squared,3)
-  #ttest_c = t.test(lasso$fitted.values,test$Engr.Est)$p.value
+lasso2 = cv.glmnet(x=XP, y=YP, alpha=.25) 
+coef(lasso2, s=lasso2$lambda.1se) 
 ```
 
+This suggests using anything beyond the engineer's estimate itself to better predict the lowest qualifying good adds more uncertainty (in the form of noise that's tough to explain) than it adds value. (The "penalty" associated with adding variables is greater than the extra predictive power they bring.) The most obvious exception is project size, which isn't too surprising given the exploratory work done earlier. 
 
-#Accuracy 
-
-Fascinating. 
-I first tried calculating a metric that captures accuracy (the relationship between the estimate and the actual). We wanted to use a weighted average of the ratio between estimate and actuals. Something like this ... 
-
-accuracy_a = weighted.mean((train$Engr.Est/train$Low.Bid),train$Low.Bid) 
-
-... applied across all three prisms (uncontrolled and the two models). 
-
-But that calculation just results in 1 (and exactly 1) for both models. 
-So we tried something different, summing the estimates and (separately) the actuals, and then dividing those totals. But that also gave me 1 because the average estimate and the average actual are exactly the same, down to the dollar. 
-
-How can we be estimating the value that well, on average? The model must be optimized with respect to the average dependent value. 
-
-But this is a question for another time. For now I'll just need to lean on other metrics as indications of accuracy: 
-
-```{r echo=FALSE}
-accuracy_a = cor(train$Engr.Est,train$Low.Bid) 
-accuracy_b = cor(base$fitted.values,train$Low.Bid) 
-#accuracy_c = cor(lasso$fitted.values,train$Low.Bid) 
-```
-
-Well, the correlations between estimates and actuals do show signals of tightening up slightly. But how robust is this, really? Are the numbers really different? And how would the two models perform on fresh data? 
-
-##Compare new estimates to original estimates.
-```{r echo=FALSE}
-ttest_a = "NA" 
-ttest_b = t.test(base$fitted.values,train$Engr.Est)$p.value
-#ttest_c = t.test(compare$fitted.values,train$Engr.Est)$p.value
-```
-No statistically significance differences to be found in either case.
-
-#Validate
-##Run on the withheld data and check.
-
-We've already got the models (both of them): "base" and "compare".
-
-```{r, echo=FALSE, message = FALSE, warning = FALSE}
-test_accuracy_a = cor(test$Low.Bid,test$Engr.Est) 
-
-base2 = lm(log(Low.Bid) ~ Engr.Est + Employment.in.construction + permits_1 + cci, data = test) 
-
-  options(scipen=999)
-  estimate_b2 = base2$fitted.values #predict(compare,train2) 
-  test_mse_b = round(mse(test$Low.Bid,base2$fitted.values),0)
-  test_accuracy_b = cor(test$Low.Bid,base2$fitted.values) 
-  test_adjr_b = round(summary(base2)$adj.r.squared,3)
-  test_ttest_b = t.test(base2$fitted.values,test$Engr.Est)$p.value
-```
-
-Results for the broader model: 
-
-```{r echo=FALSE}
-#compare2 = lm(Low.Bid ~ ., data=test2) 
-#  estimate_c2 = compare2$fitted.values #predict(compare,train2) 
-#  t.test(estimate_c2,test2$Engr.Est) 
-#  test_mse_c = round(mse(test2$Low.Bid,estimate_c2),0)
-#  test_accuracy_c = cor(test2$Low.Bid,compare2$fitted.values) 
-#  test_adjr_c = round(summary(compare2)$adj.r.squared,3)
-#  test_ttest_c = t.test(compare2$fitted.values,test2$Engr.Est)$p.value
-```
-
-
-#Compare
-```{r echo=FALSE, message = FALSE, warning = FALSE}
-#table_1 = c("none","base","lasso") 
-#table_2 = c("NA",round(ttest_b,3),round(ttest_c,3)) 
-#table_3 = c(round(accuracy_a,3),round(accuracy_b,3),round(accuracy_c,3)) 
-#table_4 = c("NA",adjr_b,adjr_c) 
-#table_5 = c("NA",formatC(mse_b, big.mark=","),formatC(mse_c, big.mark=",")) 
-#table_6 = c("NA",round(test_ttest_b,3),round(test_ttest_c,3))
-#table_7 = c(round(test_accuracy_a,3),round(test_accuracy_b,3),round(test_accuracy_c,3))
-#table_8 = c("NA",round(test_adjr_b,3),round(test_adjr_c,3))
-#table_9 = c("NA",formatC(test_mse_b, big.mark=","),formatC(test_mse_c, big.mark=","))
-```
-
-This is a table comparing performance of: 
-1. The raw estimates, 
-2. The manually-developed model, and, 
-3. The informed model 
-along some key measures. The p-values (below 0.1 is strong) and correlation (closer to 1 is strong) can be considered discretely for the two models (and, for correlation, the raw estimate), as they reflect how strongly predicted bids and actual bids are related, and the adjusted R-squared (closest to 1 is best) and mean squared error (MSE; lower is best) data points offer technical insight into how well each model performs ... 
-
-For the training exercise (data from 2015-Q1 2019): 
-```{r echo=FALSE}
-#results_train = as.data.frame(cbind(table_1,table_2,table_3,table_4,
-#                      table_5));
-#names(results_train) = c("model","p-value","cor","adj-R2","MSE")  
-#results_test = as.data.frame(cbind(table_1,table_6,table_7,table_8,table_9));
-#names(results_test) = c("model","test_p-value","test_cor","test_adj-R2","test_MSE") 
-#rm(table_1,table_2,table_3,table_4,table_5,table_6,table_7,table_8,table_9) 
-```
-
-Results: 
 ```{r}
-#t(results_train) 
+bids = fastDummies::dummy_cols(bids, select_columns = "quantile") 
+bids$quantile = as.factor(bids$quantile) 
+summary(lm(bids$Second.Bid ~ bids$Engr.Est + bids$quantile_2 + bids$quantile_3 + bids$quantile_4 + bids$quantile_5 + bids$quantile_6 + bids$quantile_7 + 
+             bids$quantile_8 + bids$quantile_9 + bids$quantile_10)) 
 ```
 
-For the test (data withheld, from Q2 and Q3 2019): 
-```{r echo=FALSE}
-#t(results_test) 
+
+Plots from exploratory bivariate work are below. Each considers a potential predictor's relationship to the agency's cost estimation accuracy, defined here as the second-lowest bid over the internal agency estimate. 
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+summary(lm(bids$accuracy ~ bids$Loc)) 
+
+ggplot(bids, aes(x = Loc, y = accuracy)) + #, shape = Loc)) +  
+    geom_hline(colour="dark gray", yintercept=1) +
+    geom_jitter(width=0.2) +
+    geom_crossbar(data=loc.summary, aes(ymin = accuracy, ymax = accuracy),
+                  size=1,col="red", width = .5) + 
+    ylab("Second Bid ÷ Estimate") + 
+    theme(axis.title.y=element_text(size=10))
 ```
 
-# Discussion. 
-The model we selected myself doesn't do much better than the engineer's estimate. And the model with automated variable selection via lasso doesn't really do any better than the one by hand. 
+```{r}
+summary(lm(bids$accuracy ~ as.factor(bids$Format))) 
 
-The big insight here seems to be the impact project size has on accuracy. 
+ggplot(bids, aes(x = Format, y = accuracy)) + #, shape = Loc)) +  
+    geom_hline(colour="dark gray", yintercept=1) +
+    geom_jitter(width=0.2) +
+    geom_crossbar(data=format.summary, aes(ymin = accuracy, ymax = accuracy),
+                  size=1,col="red", width = .5) + 
+      ylab("Second Bid ÷ Estimate") + 
+    theme(axis.title.y=element_text(size=10))
+```
+
