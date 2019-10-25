@@ -238,16 +238,6 @@ base = lm(Second.Bid ~ Engr.Est + Employment.in.construction + Format2 + Typeolo
 
 The equation above throws a decent amount of information at the engineering estimate and tries to predict the second bid. If the result is noticably closer to the low qualifying bid than the original estimate, you can use the delta as a post-estimation fudge factor to adjust the final estimate.
 
-The numbers calculated above include a few metrics to use in comparing the three estimates against the objective data point at the low bid, which is what we're trying to predict. Ghose three estimates I'm talking about are: 
-  1. The original, raw engineering cost estimate,
-  2. The first alternative, where we built a model by hand to try and use a few more data points to enhance the original estimate, and; 
-  3. The second alternative, a kitchen sink model that throws even more data points at the question. This followed an effort to use a penalized regression to identify the best covariates, but that penalization algorithm actually suggested there isn't much we can do to enhance the original estimate. (Note: this will prove prescient.)
-
-I'll build a table near the very end of this script that summarize the metrics I'm using to understand how well these modeling efforts work. The metrics will be: 
-  A. A basic t-test to understand whether there's even a statistically significant difference between the estimate I'm getting and the enhanced estimate I'm modeling with it, 
-  B. A correlation between the two numbers, to try and understand the magnitude of that difference (if we can trust it really exists), 
-  C. Two measures of the predictive modeling power of the models, an adjusted R-squared and the mean squared error (MSE). Both are common metrics of power. The first can be viewed discretely for each model but the second only provides a relative measure between models.
-
 What is the summary of the predicted values? How does it compare to the summary of second-lowest bids?
 
 ```{r, echo=FALSE, include=FALSE, message = FALSE, warning = FALSE}
@@ -263,17 +253,10 @@ summary(lm(base$fitted.values ~ train$Second.Bid))
 
 Maybe something more robust can come with a little creativity. 
 
-(Note: the model should control to prevent negative values. To be done next time.)
 
-It might have been worth trying with the log of prices, only because the statistical fit becomes multiplicative instead of linear, but that produced similar results.
+##4b. Shrinkage and automated variable selection.
 
-##4b. Regularization.
-Strip the bids data of unusable stuff, then set controls and run.
-The package I'm using, glmnet, requires a little extra preparation.
-
-Could running a regularization process weed out weaker variables and identify one or two items that help prediction? The process would shrink (toward zero) the estimates for covariates that threaten to introduce more uncertainty than predictive power. This chooses a model automatically. 
-
-Running a regularized regression below adopts base assumptions in the modeling software package (10 folds, standardized coefficients, gaussian distribution, MSE evaluation metric, et cetera). 
+Running a regularization process can weed out weaker variables and identify one or two key items to help prediction. The process would shrink (toward zero) the estimates for covariates that threaten to introduce more uncertainty than predictive power. The need for manageability meant adopting some basic assumptions from the modeling software (10 folds, standardized coefficients, use of mean squared error as an evaluation metric, et cetera). 
 
 ```{r, echo=FALSE, include=FALSE, message = FALSE, warning = FALSE}
 train2 = train[,-c(1:5,7:10,12,14,16,53)] 
