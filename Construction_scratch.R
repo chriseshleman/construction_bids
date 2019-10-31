@@ -3,6 +3,7 @@
 
 #install.packages("ISLR") 
 library(ISLR) 
+library(ggplot2) 
 library(glmnet) 
 library(gtools) 
 library(dplyr) 
@@ -12,6 +13,23 @@ hitt = Hitters #backup
 head(Hitters) 
 sum(is.na(Hitters$Salary))
 Hitters = na.omit(Hitters) 
+head(Hitters) 
+
+########
+# Faceting options ggplot 
+table(Hitters$Years) 
+hitters = subset(Hitters,Hitters$Years<11) 
+names(hitters) 
+hit.summary = aggregate(Errors ~ Years, mean, data=na.omit(hitters)) 
+ggplot(hitters, aes(x = as.factor(Years), y = Errors, scolor = Division)) + 
+  geom_hline(colour="dark gray", yintercept=1) +
+  geom_jitter(width=0.2) +
+  geom_crossbar(data=hit.summary, aes(ymin = Errors, ymax = Errors),
+                size=1,col="red", width = .5) + 
+  ylab("Second Bid ÷ Estimate") + 
+  theme(axis.title.y=element_text(size=10)) 
+
+
 
 ########
 # Ridge Lasso and Elastic Net 
