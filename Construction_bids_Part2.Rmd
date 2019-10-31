@@ -1,0 +1,33 @@
+---
+title: "Construction_bids_Part2"
+author: "Christopher Eshleman"
+date: "10/31/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\pagebreak
+
+##Number of bidders.
+```{r, echo=FALSE, message = FALSE, warning = FALSE}
+ggplot(bids, aes(x=Bids, y=accuracy)) + geom_point(size=2,shape=1) + 
+  geom_smooth() +
+  ylab("Second Bid ÷ Estimate") 
+```
+
+##Bids by project size.
+```{r, echo=FALSE}
+ggplot(bids, aes(x = as.factor(quantile), y = Bids)) + 
+    geom_hline(colour="dark gray", yintercept=mean(bids$Bids)) +
+    geom_jitter(width=0.2) +
+      ylab("# Bidders") + 
+      xlab("Project size (deciles; L to R smallest to largest)") + 
+    theme(axis.title.y=element_text(size=10)) 
+```
+
+```{r, echo=FALSE}
+options(warn=0)
+```
