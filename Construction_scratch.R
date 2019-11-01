@@ -9,6 +9,7 @@ library(gtools)
 library(dplyr) 
 library(tidyverse) 
 
+
 hitt = Hitters #backup 
 head(Hitters) 
 sum(is.na(Hitters$Salary))

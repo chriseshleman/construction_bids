@@ -12,14 +12,24 @@ output:
 
 \pagenumbering{arabic}
 
-#1. Overview
-The Port Authority estimates project costs internally prior to bidding. The statistical analysis described below indicates two factors — project size and bidding process — can explain a significant degree of those estimates' accuracy. The agency may be able to more accurately predict costs by adjusting initial estimates to account for those two variables. 
-We considered a number of data sets in this analysis including project-level characteristics, construction costs, and regional and national indicators specific to the economy, labor market, and construction activity. 
+
+#1. Summary
+The Port Authority estimates project costs internally prior to bidding. Its accuracy varies from project to project. The statistical analysis described here indicates two factors — project size and bidding process — explain a noteworthy degree of accuracy. The agency may be able to more accurately predict costs by adjusting initial estimates to account for those two variables. 
+
+We considered a number of data sets including project-level characteristics, construction costs, and regional and national indicators specific to the economy, labor market, and construction activity. 
+
+Discussion is broken down into: 
+  - Overview of data sets, 
+  - Exploratory analysis, 
+  - Methodology, and 
+  - Discussion and next steps. 
+
+The appendix includes more detailed findings from the exploration and full model results.
 
 ```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
 rm(list = ls()) # clear global environment 
 cat("\014") # clear the console 
-options(warn=-1)
+options(warn=-1) # suppress annoying warnings 
 
 # A number of programming tools commonly used for this analysis are loaded below; not all will be used - some are relics from early iterations of this work.
 
@@ -32,6 +42,8 @@ library(DataCombine)
 library(dplyr) 
 library(compare) 
 library(StatMeasures) 
+library(qwraps2) 
+library(Hmisc) 
 library(caret) 
 library(mlbench) 
 library(glmnet) 
@@ -46,14 +58,25 @@ library(MLmetrics)
 library(mltools) 
 library(grid) 
 library(arsenal) 
+library(knitr) 
+#library(devtools) 
+#devtools::install_github("rstudio/rmarkdown")
 ```
 
-The exploration of those data and discussion of modeling methodology are covered, respectively, in the two sections below, followed by a discussion of findings and suggested next steps. 
+```{r, echo=FALSE, include=FALSE}
+# Control font size of chunk output
+def.chunk.hook = knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x = def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE)
+```
 
 
 #2. Data
-Project-level characteristics, referred to here as the "bids" data set, come from the Engineering Department. Economic and demographic indicators are specific to Greater New York (18 counties on both sides of the Hudson River) and come from the Planning and Regional Development Department; underlying data is from Oxford Economics. City of New York building permits data is from the city's Department of Buildings. It can help proxy for activity in the broader regional construction market. The Engineering News-Record's construction cost index (CCI) serves as proxy for broader hard construction costs.
-
+Project-level characteristics, referred to here as the "bids" data set, come from the Engineering Department. Economic and demographic indicators are specific to Greater New York (18 counties on both sides of the Hudson River) and come from the Planning and Regional Development Department; underlying data is from Oxford Economics. Construction permitting data comes from the City of New York's Department of Buildings. The Engineering News-Record's construction cost index (CCI) serves as proxy for broader construction costs. Data not specific to project, such as economic variables and permitting, is quarterly.
 
 ```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
 setwd("~/Dropbox/Work and research/Port Authority/construction_bids") 
@@ -82,9 +105,9 @@ bids = merge(bids,econ, by = "Q", all.x=TRUE)
 rm(econ) 
 ```
 
-Construction data is better from some parts of the region than others, and Jersey City's construction data is not yet as dependable as the City of New York's. NYC dominates regional construction anyway and it's justifiable for now to use its permitting data as somewhat representative of the broader regional construction market. 
+Construction data is better from some parts of the region than others, and Jersey City's permitting data is not yet as dependable as the City of New York's. New York dominates regional construction anyway and it's justifiable for now to use its permitting data as
+representative of broader regional construction trends.
 
-Prices of construction materials and labor already figure directly into the agency's internal cost estimation, and this analysis borrows the same index for predictive powers despite uncertainty regarding whether its implicit presence in agency estimates helps or hurts its role in any multivariable treatments.
 
 ```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
 permits_short = read.csv("./Permits_short.csv") 
@@ -115,19 +138,19 @@ bids = merge(bids, cci, by = "Q", all.x=TRUE)
 rm(cci) 
 ```
 
-One variable of interest entering this analyssi was the actual bidding process itself. Institutional discussions and earlier modeling work suggested the bidding process may increase real (actualized) project costs. This is intuitive: limits placed on the range of bidders could, on average and holding other things constant, increase the average (and lowest qualifying) bid - this is basic supply and demand. The Engineering Department's data set included a range of categorical designations for bidding processes, and this analysis simplifies the variable by making it binary: "public" for projects without significant constraints and "other" for ones closed to firms that don't qualify, such as large enterprises. 
+One variable of interest prior to this analysis is the actual bidding process itself. Institutional discussions and earlier modeling work suggested the bidding process may increase real (actualized) project costs. This is intuitive: limits placed on the range of bidders could, on average and holding other things constant, increase the average (and lowest qualifying) bid - this is basic supply and demand. The Engineering Department's data set included a range of categorical designations for bidding processes, and this analysis simplifies the variable by making it binary: "public" for projects without significant constraints and "other" for ones closed to firms that don't qualify, such as large enterprises. 
 
 ```{r echo=FALSE, include=FALSE}
 bids$Format = as.factor(ifelse(bids$Format=="Public","Public", ifelse(bids$Format=="D-B"|bids$Format=="M/WBE"|bids$Format=="MBE"|bids$Format=="MBE/WBE"|bids$Format=="MWBE", "M/WBE",ifelse(bids$Format=="SBE","SBE","Other"))))
 bids$Format2 = as.factor(ifelse(bids$Format=="Public","Public","Other")) 
 ```
 
-Earlier work suggests there isn't major variation across the individual developing the in-house estimate and, as a consequence, unique employee (estimator) identifiers are omitted from this review.
+Earlier work suggests there isn't major variation across the individual agency employee developing the in-house estimate and, as a consequence, unique employee (estimator) identifiers are omitted from this review.
 
 ###Note: costs and estimation accuracy
-The agency's construction projects span months or years of time and actual costs do not exist for many of the observations, which at just over 260 projects already creates minor dimensionality concerns given the number of potential predictive variables. This analysis thus evaluates agency estimates as they compare to the second-lowest bid. This provides a metric — a reasonable target for evaluating internal estimates. The "accuracy" metric occasionally referenced through the exploratory section and appendix refers to a ratio of that second-lowest bid divided by the initial agency estimate, both in dollars. Example: an accuracy score of 1.0 would represent a case where the internal estimate (denominator) precisely matched the second-lowest bid (numerator); an accuracy of 0.94 would mean the second-lowest bid included 94 cents for every dollar estimated internally; et cetera.
+The agency's construction projects span months or years of time. Actual cost data does not exist for many of the observations, which at 239 projects already creates minor dimensionality concerns given the number of potential predictive variables. This analysis thus evaluates agency estimates as they compare to the second-lowest bid. This provides a metric — a reasonable target for evaluating internal estimates. The "accuracy" metric occasionally referenced through the exploratory section and appendix refers to a ratio of the second-lowest bid divided by the initial agency estimate, both in dollars. For example, an accuracy score of 1.0 would represent a case where the second-lowest bid (numerator) provided a near-precise match to the internal estimate (denominator); an accuracy of 0.94 would mean the second-lowest bid included 94 cents for every dollar estimated internally; et cetera.
 
-A handful of projects attracted only one bid. In those cases, that bid is used in place of a second-lowest bid.
+Five projects attracted only one bid. They averaged only $3.2 million (second-lowest bid). In those cases, that bid is used in place of a second-lowest bid.
 
 ```{r, echo=TRUE, include=FALSE}
 bids$accuracy = bids$Second.Bid / bids$Engr.Est 
@@ -158,7 +181,7 @@ bid = bids # backup my data frame
 
 #3. Exploratory analysis
 
-Why might developing a conrolled multivariate model help improve predictions? The average gap between second-lowest bids and initial agency estimates is less than $900,000, or roughly 5% (the average project bid was around $15 million).
+Why might developing a conrolled multivariate model help improve predictions? The average gap between second-lowest bids and initial agency estimates is less than $900,000, or roughly 5 percent (the average project bid was around $15 million).
 
 ```{r, echo=FALSE, include=FALSE}
 weighted.mean((bids$Second.Bid/bids$Engr.Est), bids$Engr.Est, na.rm = TRUE)
@@ -188,11 +211,11 @@ decile.summary = aggregate(accuracy ~ quantile, mean, data=na.omit(bids))
 ld.summary = aggregate(accuracy ~ LD, mean, data=na.omit(bids)) 
 ```
 
-Uncontrolled variable-to-variable relationships provide easy clues as to different data points' potential role in controlled multivariate, prediction exercise. Plots for this exploratory work are in the appendix at the end of the document; all use the definition of "accuracy" defined a few paragraphs above. A few things stand out as promising predictors before getting to modeling (a plot of bidding is show just below this list; visualizations for the other relationships can be found in the appendix, along with corresponding test statistics): 
+Uncontrolled variable-to-variable relationships provide easy clues as to different data points' potential role in any prediction exercises. Plots for this exploratory work are in the appendix; all use the definition of "accuracy" defined a few paragraphs above. A few things stand out as promising predictors before getting to modeling:
 
-- Location: projects that span the Hudson River seem to come in, on average, higher than expected. Projects that span the Hudson River wind up costing (with respect to estimates) more, on average, than ones plunked squarely in either New York or New Jersey.
+- Location: Projects that span the Hudson River wind up costing (with respect to estimates) more, on average, than ones plunked squarely in either New York or New Jersey and appear to be slightly tougher to predict;
 - Bidding (see plot below): the bidding process can be constrained or open, with potential ramifications on the ability to estimate costs. 
-- Typeology: project type (infrastructure, building, pavement) has an identifiable, if yet uncontrolled, relationship with estimating accuracy. Of those three categories, the agency appears to predict paving projects the best. Note: the story changes when considering the lowest bid, where paving projects' relationship to estimates varies significantly. 
+- Typeology: project type (infrastructure, building, pavement) has an identifiable, if yet uncontrolled, relationship with estimating accuracy. Of those three categories, the agency appears to predict paving projects the best. (Note of interest: the story changes when considering the lowest bid, where bidding paving projects varies significantly.)
 - Variance: outliers for PATH and TB&T push the average accuracy metric up for each, otherwise there's little apparent difference across departments. 
 - Size: strong signals emerge that projects of medium size (in dollar terms) may be more evasive than much larger or smaller projects. 
 
@@ -206,20 +229,20 @@ ggplot(bids, aes(x = Format, y = accuracy)) + #, shape = Loc)) +
     theme(axis.title.y=element_text(size=10))
 ```
 
-Project size and bidding format provide strong one-to-one signals of predictive power and may provide the most valuable results. One might have expected the largest or smallest projects to be the toughest to predict - particularly the very smallest projects. But it's the projects ranging from the 40th to 70th percentiles that seem to be the most challenging, although this insight may change subsequent to review by and feedback from the Engineering Department.
+Project size and bidding format provide strong one-to-one signals of predictive power and may provide the most valuable results. One might have expected the largest or smallest projects to be the toughest to predict - particularly the very smallest projects. But it seems to be the projects ranging from the 40th to 70th percentiles that are the most challenging, although this insight may change subsequent to review by and feedback from the Engineering Department.
 
 
 #4. Modeling and prediction
 
-This section provides a technical discussion of statistical modeling and is included as documentation and for reproducability and transparency. Supporting code and data sets have accompanied delivery of this report and are otherwise available. 
+This section provides a technical discussion of statistical modeling and is included as documentation for reproducability and transparency. Supporting code and data sets have accompanied delivery of this report and are otherwise available. 
 
-The goal is to enlist the help of various data points to try and enhance internal agency estimates of project cost. The subsequent data set carries dimensionality challenges given the number of variables (absolutely and relative to the number of observations). It includes a mix of continuous variables and qualitative factors, both ordinal and nominal and all treated categorically without conversion to binary constituencies — the two modeling processes (OLS and regularization) employed here do that automatically. 
+The goal of this project is to enlist the help of various data points to try and enhance internal agency estimates of project cost. The data set carries dimensionality challenges given the number of variables (absolutely and relative to the number of observations). It includes a mix of continuous variables and qualitative factors, both ordinal and nominal and all treated categorically without conversion to binary constituencies — the two modeling processes (OLS and regularization) employed here do that automatically. 
 
 
 ##4a. Base model (manual selection and linear regression)
-Interpretation: specification was manual and intuitive. Given the fact that estimators' already try and take much of the variables considered here into account, a model with even a handful of extra covariates could overfit the test data.
+Model specification can be manual and intuitive. Given the fact that estimators' already try and take many of the variables considered here into account when they're doing their work, a model with even a handful of extra covariates could overfit the test data.
 
-Note: ensure the accuracy variable calculated earlier is dropped before modeling or it would introduce some dual (reverse) causality, which could confuse models.
+Note: we ensure the accuracy variable calculated earlier is dropped before modeling or it would introduce some dual (reverse) causality, which could confuse models.
 
 Split data into training  / test sets. One would split randomly with cross-sectional data but since this effort aims to help predict temporally, split by date — use projects (n=213) from 2015 through the first quarter of 2019 to train models and projects (n=26) from March through today to test. That's not many projects for testing but the real test will come as another quarter or two of data arrive.
 
@@ -233,48 +256,50 @@ train$accuracy=NULL
 test$accuracy=NULL 
 ```
 
-Choose a handful of potential predictors and build a linear model. Go with the original estimate (always included) and (1) regional construction-specific employment, (2) bidding process (public or other), (3) typeology (infrastructure, building, or paving), (4) construction permits (lagged by one quarter), (5) construction costs (indexed), and (6) project size, with project dollars (from the second bid) categorized in deciles. 
+Choose a handful of potential predictors and build a linear model. Go with the original estimate (always included) and (1) regional, construction-specific employment, (2) bidding process (public or other), (3) typeology (infrastructure, building, or paving), (4) construction permits (lagged by one quarter), (5) construction costs (indexed), and (6) project size, with project dollars (from the second bid) categorized in deciles. 
 
-```{r, include=TRUE, echo=TRUE, message = FALSE, warning = FALSE}
+```{r, include=TRUE, echo=TRUE, message = FALSE, warning = FALSE, size="tiny"}
 base = lm(Second.Bid ~ Engr.Est + Employment.in.construction + Format2 + Typeology + permits_1 + cci + quantile, data = train) 
 
   options(scipen=999)
   summary(base) 
 ```
 
-The equation above throws a decent amount of information at the engineering estimate and tries to predict the second bid. If the result is noticably closer to the low qualifying bid than the original estimate, you can use the delta as a post-estimation fudge factor to adjust the final estimate.
+The equation above throws a decent amount of information at the engineering estimate to try and enhance its predictive accuracy; the result might be called an "enhanced" prediction. 
 
-What is the summary of the predicted values? How does it compare to the summary of second-lowest bids? Looking at the two summaries, the original engineering estimate and the enhanced prediction do appear to be significantly (statistically) different. 
 ```{r, echo=FALSE, include=FALSE, message = FALSE, warning = FALSE}
 summary(lm(base$fitted.values ~ train$Second.Bid))
 ```
-.
 
-Maybe something more robust can come with a little creativity.
+Some regularization may be able to do better by selection variables for us.
 
 
 ##4b. Shrinkage and automated variable selection.
 
-Traditional methodology — tossing variables that made intuitive sense into a model and evaluating outcomes — might have identified a few reliable predictors. But it fell short and, even if it had, specification problems and covariate bias would have challenged the results.
-A survival method may help — automated variable selection can weed out weaker variables and identify one or more key items to help prediction. Regularization processes penalize variables that threaten to introduce more uncertainty than predictive power to a model. Regularization modeling builds atop ordinary least squares regression, which fits a curve to data that minimizes the distance between the curve and any given point in the data set. Traditional least squares modeling can be prone to overfitting — reading too much signal from what is essentially meaningless noise and providing a tool that creates a poor fit for data that, while tied to the underlying process being modeled, was absent during the fitting process; this presents obvious challenges for prediction.
+Traditional methodology — tossing variables that made intuitive sense into a model and evaluating outcomes — might have identified a few reliable predictors. But it fell short and, even if it had, specification problems and omitted variable bias would have challenged the results.
+A survival method may help — automated variable selection can weed out weaker variables and identify one or more key items to help prediction. Regularization processes penalize variables that threaten to introduce more uncertainty than predictive power to a model. Regularization modeling builds atop ordinary least squares regression, which fits a curve that minimizes the distance between the curve and any given point in the data set. Traditional least squares modeling can be prone to overfitting — reading too much signal from what is essentially meaningless noise and providing a tool that creates a poor fit for data that, while tied to the underlying process being modeled, was absent during the fitting process; this presents obvious challenges for prediction.
 
-Regularization begins with the least squares method and adds a penalty. That penalty term is guided by a tuning parameter that essentially works as a dimmer switch — it can be cranked up to increase the penalty or down all the way to zero, which effectively turns off the penalty and produces the same results one would get from ordinary least squares. The tuning parameter is represented by the lambda in the second equation for error estimation (both from Hastie and Tibshirani):
+Regularization begins with the least squares method and adds a penalty. That penalty term is guided by a tuning parameter that essentially works as a dimmer switch — it can be cranked up to increase the penalty or down all the way to zero, which effectively turns off the penalty and produces the same results one would get from ordinary least squares. The tuning parameter is represented by the lambda in the second equation for error estimation (from James, Witten, Hastie and Tibshirani, 2013):
 
 ```{r fig.width=2.5, fig.height=10,echo=FALSE}
 library(png)
 library(grid)
-img <- readPNG("error_ols.png")
+img = readPNG("error_ols.png")
  grid.raster(img)
 ```
 
 ```{r fig.width=3.45, fig.height=10,echo=FALSE}
 library(png)
 library(grid)
-img <- readPNG("error_ml3.png")
- grid.raster(img)
+img2 = readPNG("error_ml3.png")
+ grid.raster(img2)
 ```
 
-Run cross-validation to pick the tuning parameter. Cross-validation runs modeling processes iteratively by resampling the data — splitting it into a series of tranches used systematically as training and test sets. The fit with the lowest test error identifies the tuning parameter: 
+Run cross-validation to pick the tuning parameter. Cross-validation uses iterative resampling — splitting the data into a series of tranches used systematically as training and test sets. The fit with the lowest test error identifies a cut-off point regarding reliable predictive variables, which in tune guides selection of the tuning parameter.
+
+Note: to help here with manageability and reproducibility, adopt some of the modeling software’s basic assumptions (10 folds, standardized coefficients, use of mean squared error as an evaluation metric, et cetera).
+
+This analysis uses a blended regularization penalty that falls between ridge and lasso (the "alpha" is set at 0.25):
 
 ```{r, echo=TRUE, include=FALSE, message = FALSE, warning = FALSE}
 # Pare the data set to exclude variables inappropriate for the modeling process. 
@@ -293,26 +318,22 @@ set.seed(423)
 cv = cv.glmnet(x, train2[, 5], alpha = blend) 
 plot(cv) 
 ```
-(Note: to help here with manageability and reproducibility, adopt some of the modeling software’s basic assumptions (10 folds, standardized coefficients, use of mean squared error as an evaluation metric, et cetera).)
 
-THis analysis uses a blended regularization penalty that falls between ridge and lasso (the "alpha" is set at 0.25). 
-
-The tuning parameter that gets chosen isn't actually the one associated with the model exhibiting the lowest test error, but with the one coinciding with a sister model (with the lowest test error plus a standard error). If a few models' test errors are with a standard error of one another, default to the simplest of the group. 
+The tuning parameter that gets chosen isn't actually the one associated with the model exhibiting the lowest test error, but with the one coinciding with a sister model carrying the lowest test error plus a standard error. If a few models' test errors are with a standard error of one another, I default to the simplest of the group.
 
 The result suppresses all but a pair of predictors: project size and bidding process. 
 
-(Very technical note: this regularization process actually carries the prospect of increasing bias and, in the process, dulling coefficients’ reflection of the real world relationship between the processes being modeled. (It can introduce or exacerbate bias.) Regularization is often run with a penalty that, prior to tuning, sums squared coefficients or their absolute values, the second of which is responsible for forcing weak predictors completely out of the model. Performing analysis with the latter shrunk all covariates (aside from the engineer’s estimate) to zero, suppressing them completely. This is a harsh variable selection process but it might’ve been expected given the original estimates’ proven strength. It doesn’t leave enough clues for anyone to offer potential improvements. A little fine-tuning to the penalty combines the regularization treatments and gives the model a little leash, identifying predictors that survive as the model gets further from ordinary least squares without disappearing.) 
+(Very technical note: this regularization process actually carries the prospect of increasing bias and, in the process, dulling coefficients’ reflection of the real world relationship between the processes being modeled. (It can introduce or exacerbate bias.) This harsh variable selection process is appropriate given the original estimates’ obvious raw predictive strength. A little fine-tuning to the penalty combines the regularization treatments and gives the model just enough leash to identify predictors that survive as the model gets further from ordinary least squares without disappearing.
 
 ```{r, echo=FALSE, include=TRUE}
 cv.model = glmnet(x, train2[, 5], alpha=blend, lambda=cv$lambda.1se) 
 ```
 
-```{r, echo=FALSE, include=TRUE}
+```{r, echo=FALSE, include=FALSE, size="tiny"}
 cv.model 
 #coef(cv.model) 
 ```
 
-Predict using the model and the test data. 
 ```{r, echo=TRUE, include=FALSE}
 cv.predict = predict(cv, s=cv$lambda.1se ,newx=data.matrix(test2[,-5])) 
 ```
@@ -327,13 +348,13 @@ ols.model = glmnet(x, train2[, 5], alpha=blend ,lambda=0)
 ols.predict = predict(ols.model, s=0, newx=data.matrix(test2[,-5])) 
 ```
 
-Errors (test) for regularization and ordinary models, respectively: 
+Errors (test) for ordinary model and regularized model, respectively: 
 ```{r, echo=FALSE, include=TRUE}
-mean((cv.predict-test2$Second.Bid)^2) # Regularized error, test
 mean((ols.predict-test2$Second.Bid)^2) # OLS error, test 
+mean((cv.predict-test2$Second.Bid)^2) # Regularized error, test
 ```
 
-Regularization not only reduced error for the model built using pre-Q2 2019 projects, but that model then provides a stronger fit using the withheld projects.  And consider the implications for interpretability. Regress using the full data set: 
+Regularization not only reduced error for the model built using pre-Q2 2019 projects, but that model then provides a stronger fit using the withheld projects. The second model is also much easier to interpret. Now regress using the second model and the full data set: 
 ```{r, echo=FALSE, include=TRUE}
 full2 = rbind(train2,test2) 
   x = train2[,-5]
@@ -344,46 +365,31 @@ full.predict = predict(full.model, type="coefficients", s = cv$lambda.1se)
 
 
 #5. Discussion.
-This suggests some room for targeted efforts to add value to the average engineer's estimate, since it already correlated very highly with targets. The most obvious predictor is project size, which isn't too surprising given the exploratory work done earlier. The bidding process, or "format" using the Engineering Department's terminology, was the other predictor to survive the elimination process. 
+This suggests some room for targeted efforts to add value to the average engineer's estimate, which already correlates very highly with targets. The most obvious predictor is project size, which isn't too surprising given the exploratory work done earlier. The bidding process, or "format" using the Engineering Department's terminology, was the other predictor to survive the modeling process. 
 
 Both project size and format represent avenues for post-estimation adjustments that could improve accuracy. 
 
-Next steps include looking for best practices regarding post-estimation adjustments for project cost by size and/or bidding process. Here are bivariate, uncontrolled relationship parameters between bids and project size: 
+Next steps include looking for best practices regarding post-estimation adjustments for project cost by size and/or bidding process. Relationship parameters between bids and project size: 
 
 ```{r, echo=FALSE, include=TRUE}
 bids = fastDummies::dummy_cols(bids, select_columns = "quantile") 
 bids$quantile = as.factor(bids$quantile) 
 ```
 
-##Both project size and bidding process.
-```{r, echo=TRUE, include=TRUE}
+##Project size and bidding process
+```{r, echo=TRUE, include=TRUE, size="tiny"}
 summary(lm(bids$Second.Bid ~ bids$Engr.Est + bids$quantile_2 + bids$quantile_3 + bids$quantile_4 + bids$quantile_5 + bids$quantile_6 + bids$quantile_7 + bids$quantile_8 + bids$quantile_9 + bids$quantile_10 + bid$Format2))  
-```
-
-##Project size only. 
-```{r, echo=TRUE, include=TRUE}
-summary(lm(bids$Second.Bid ~ bids$Engr.Est + bids$quantile_2 + bids$quantile_3 + bids$quantile_4 + bids$quantile_5 + bids$quantile_6 + bids$quantile_7 + bids$quantile_8 + bids$quantile_9 + bids$quantile_10))  
-```
-
-##Bidding process only. 
-```{r, echo=TRUE, include=TRUE}
-summary(lm(bids$Second.Bid ~ bids$Engr.Est + bid$Format2))
 ```
 
 \pagebreak
 
 #Appendix: data summary, exploratory work, model outputs.
 
-A summary of full data set: 
-
-```{r}
-table_one = tableby(Second.Bid ~ ., data = bids)
-summary(table_one, title = "Gapminder Data")
-```
+Data summary to come. 
 
 Plots and output from earlier exploratory bivariate work are below. Each considers a potential predictor's relationship to the agency's cost estimation accuracy, defined here as the second-lowest bid over the internal agency estimate. 
 
-##Location.
+##Location
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 b = round(summary(aov(bids$accuracy ~ bids$Loc))[[1]][["Pr(>F)"]][[1]],4)
 ggplot(bids, aes(x = Loc, y = accuracy)) + #, shape = Loc)) +  
@@ -399,7 +405,7 @@ ggplot(bids, aes(x = Loc, y = accuracy)) + #, shape = Loc)) +
               color="red")
 ```
 
-##Bidding process ("format").
+##Bidding process (format)
 ```{r, echo=FALSE}
 c = round(summary(aov(bids$accuracy ~ bids$Format))[[1]][["Pr(>F)"]][[1]],4)
 ggplot(bids, aes(x = Format, y = accuracy)) + #, shape = Loc)) +  
@@ -415,7 +421,7 @@ ggplot(bids, aes(x = Format, y = accuracy)) + #, shape = Loc)) +
               color="red")
 ```
 
-##Project typeology.
+##Project typeology
 ```{r, echo = FALSE}
 d = round(summary(aov(bids$accuracy ~ bids$Typeology))[[1]][["Pr(>F)"]][[1]],4)
 ggplot(bids, aes(x = Typeology, y = accuracy)) + #, shape = Typeology)) +  
@@ -431,7 +437,7 @@ ggplot(bids, aes(x = Typeology, y = accuracy)) + #, shape = Typeology)) +
               color="red")
 ```
 
-##Department.
+##Department
 ```{r, echo = FALSE}
 e = round(summary(aov(bids$accuracy ~ bids$LD))[[1]][["Pr(>F)"]][[1]],4)
 ggplot(bids, aes(x = LD, y = accuracy)) + #, shape = Typeology)) +  
@@ -447,7 +453,7 @@ ggplot(bids, aes(x = LD, y = accuracy)) + #, shape = Typeology)) +
               color="red")
 ```
 
-##Project size (dollars bid).
+##Project size (dollars bid)
 ```{r, echo = FALSE}
 f = round(summary(aov(bids$accuracy ~ bids$quantile))[[1]][["Pr(>F)"]][[1]],4)
 ggplot(bids, aes(x = as.factor(quantile), y = accuracy)) + 
@@ -463,7 +469,7 @@ ggplot(bids, aes(x = as.factor(quantile), y = accuracy)) +
               color="red")
 ```
 
-##Project size (dollars) with number of bidders.
+##Project size (dollars) with number of bidders
 ```{r, echo = FALSE}
 # Number of bidders to ordinal for graphing 
 bids$n.bidders = ifelse(bids$Bids==1,"'1",ifelse(bids$Bids>=2&bids$Bids<=3,"'2-3",ifelse(bids$Bids>=4&bids$Bids<=5,"'4-5","'6+"))) 
@@ -485,13 +491,18 @@ ggplot(bids, aes(x = as.factor(quantile), y = accuracy, color = Bids)) +
               color="red") 
 ```
 
-Output from the first model (manual specification): 
-```{r}
+\pagebreak
+
+##Output: OLS
+
+```{r, echo=FALSE}
 summary(base) 
 ```
 
-Variables selected by second model (regularization):
-```{r}
+\pagebreak
+
+##Output: Variable Selection
+
+```{r, echo=FALSE}
 full.predict
 ```
-
