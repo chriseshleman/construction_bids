@@ -506,3 +506,8 @@ summary(base)
 ```{r, echo=FALSE}
 full.predict
 ```
+
+```{r}
+options(warn=0) # allow annoying warnings 
+```
+
