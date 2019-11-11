@@ -49,6 +49,8 @@ library(mlbench)
 library(glmnet) 
 library(tidyr) 
 library(tidyverse) 
+library(png)
+library(grid)
 library(broom) 
 library(tidytext) 
 library(widyr) 
@@ -203,11 +205,14 @@ ggplot(bids, aes(x=log(Second.Bid), y=log(Engr.Est))) + geom_point(size=2,shape=
 The agency's in-house engineering estimates predict more than 98% of the variation in second-lowest bids. Some of the remaining variation may be explained by institutional guesswork or targeted considerations, as discussed below. 
 
 ```{r, echo=FALSE, include=TRUE}
-# Summary stats to help visualize some obvious potential predictors 
+# Balance of second bid and engineer estimate, for visualizations.
+bids$bal = bids$Second.Bid = bids$Engr.Est 
+# Summary stats to help visualize some obvious potential predictors. 
 loc.summary = aggregate(accuracy ~ Loc, mean, data=na.omit(bids)) 
 type.summary = aggregate(accuracy ~ Typeology, mean, data=na.omit(bids)) 
 format.summary = aggregate(accuracy ~ Format, mean, data=na.omit(bids)) 
 decile.summary = aggregate(accuracy ~ quantile, mean, data=na.omit(bids))
+decile.summary2 = aggregate(bal ~ quantile, mean, data=na.omit(bids)) 
 ld.summary = aggregate(accuracy ~ LD, mean, data=na.omit(bids)) 
 ```
 
@@ -282,15 +287,11 @@ A survival method may help — automated variable selection can weed out weaker 
 Regularization begins with the least squares method and adds a penalty. That penalty term is guided by a tuning parameter that essentially works as a dimmer switch — it can be cranked up to increase the penalty or down all the way to zero, which effectively turns off the penalty and produces the same results one would get from ordinary least squares. The tuning parameter is represented by the lambda in the second equation for error estimation (from James, Witten, Hastie and Tibshirani, 2013):
 
 ```{r fig.width=2.5, fig.height=10,echo=FALSE}
-library(png)
-library(grid)
 img = readPNG("error_ols.png")
  grid.raster(img)
 ```
 
 ```{r fig.width=3.45, fig.height=10,echo=FALSE}
-library(png)
-library(grid)
 img2 = readPNG("error_ml3.png")
  grid.raster(img2)
 ```
@@ -453,7 +454,7 @@ ggplot(bids, aes(x = LD, y = accuracy)) + #, shape = Typeology)) +
               color="red")
 ```
 
-##Project size (dollars bid)
+##Project size
 ```{r, echo = FALSE}
 f = round(summary(aov(bids$accuracy ~ bids$quantile))[[1]][["Pr(>F)"]][[1]],4)
 ggplot(bids, aes(x = as.factor(quantile), y = accuracy)) + 
@@ -469,19 +470,31 @@ ggplot(bids, aes(x = as.factor(quantile), y = accuracy)) +
               color="red")
 ```
 
-##Project size (dollars) with number of bidders
+##Project size (dollars bid)
+```{r}
+ggplot(bids, aes(x = as.factor(quantile), y = bal)) + 
+    geom_hline(colour="dark gray", yintercept=1) +
+    geom_jitter(width=0.2) +
+    geom_crossbar(data=decile.summary2, aes(ymin = bal, ymax = bal), 
+                  size=1,col="red", width = .5) + 
+      ylab("Second Bid minus Estimate") + 
+    theme(axis.title.y=element_text(size=10)) 
+```
+
+
+##Project size (dollars bid) with number of bidders
 ```{r, echo = FALSE}
 # Number of bidders to ordinal for graphing 
 bids$n.bidders = ifelse(bids$Bids==1,"'1",ifelse(bids$Bids>=2&bids$Bids<=3,"'2-3",ifelse(bids$Bids>=4&bids$Bids<=5,"'4-5","'6+"))) 
 
-ggplot(bids, aes(x = as.factor(quantile), y = accuracy, color = Bids)) + 
+ggplot(bids, aes(x = as.factor(quantile), y = bal, color = Bids)) + 
       scale_colour_gradient(low = "white", high = "black") +
     geom_hline(colour="dark gray", yintercept=1) +
     geom_jitter(width=0.2) +
-    geom_crossbar(data=decile.summary, aes(ymin = accuracy, ymax = accuracy),
+    geom_crossbar(data=decile.summary2, aes(ymin = bal, ymax = bal),
                   size=1,col="red", width = .5) + 
-      ylab("Second Bid ÷ Estimate") + 
-    theme(axis.title.y=element_text(size=8), legend.position = c(.95, .95),
+      ylab("Second Bid minus Estimate") + 
+    theme(axis.title.y=element_text(size=8), legend.position = c(.15,.5),#c(.95, .95),
     legend.justification = c("right", "top"),
     legend.box.just = "right",
     legend.margin = margin(6, 6, 6, 6)) + 
@@ -507,7 +520,7 @@ summary(base)
 full.predict
 ```
 
-```{r}
+```{r, echo=FALSE, include=FALSE}
 options(warn=0) # allow annoying warnings 
 ```
 
