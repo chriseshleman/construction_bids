@@ -61,6 +61,7 @@ library(mltools)
 library(grid) 
 library(arsenal) 
 library(knitr) 
+require(scales) 
 #library(devtools) 
 #devtools::install_github("rstudio/rmarkdown")
 ```
@@ -107,8 +108,7 @@ bids = merge(bids,econ, by = "Q", all.x=TRUE)
 rm(econ) 
 ```
 
-Construction data is better from some parts of the region than others, and Jersey City's permitting data is not yet as dependable as the City of New York's. New York dominates regional construction anyway and it's justifiable for now to use its permitting data as
-representative of broader regional construction trends.
+Construction data is better from some parts of the region than others, and Jersey City's permitting data is not yet as dependable as the City of New York's. New York dominates regional construction anyway and it's justifiable for now to use its permitting data as representative of broader regional construction trends.
 
 
 ```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
@@ -196,12 +196,14 @@ summary(lm(bids$Second.Bid ~ bids$Engr.Est))
 How much inconsistency does that represent? 
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
-ggplot(bids, aes(x=log(Second.Bid), y=log(Engr.Est))) + geom_point(size=2,shape=1) +
+ggplot(bids, aes(x=log(Second.Bid), y=log(Engr.Est), color=Typeology)) +  geom_point(size=2,shape=1) +
+  geom_smooth(method=lm, se=FALSE, aes(group=1)) + 
   annotate(geom="text", x=12.5, y=19.5, label="Correlation", #"Scatter plot"
               color="red") +
   annotate(geom="text", x=12.5, y=19, label=a, #"Scatter plot"
-              color="red")
+              color="red") 
 ```
+
 The agency's in-house engineering estimates predict more than 98% of the variation in second-lowest bids. Some of the remaining variation may be explained by institutional guesswork or targeted considerations, as discussed below. 
 
 ```{r, echo=FALSE, include=TRUE}
@@ -253,7 +255,7 @@ Split data into training  / test sets. One would split randomly with cross-secti
 
 ```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
 train = subset(bids,bids$Date<"2019-03-31") 
-test = subset(bids,bids$Date>="2019-04-01")
+test = subset(bids,bids$Date>="2019-04-01") 
 ```
 
 ```{r, echo=FALSE}
@@ -263,7 +265,8 @@ test$accuracy=NULL
 
 Choose a handful of potential predictors and build a linear model. Go with the original estimate (always included) and (1) regional, construction-specific employment, (2) bidding process (public or other), (3) typeology (infrastructure, building, or paving), (4) construction permits (lagged by one quarter), (5) construction costs (indexed), and (6) project size, with project dollars (from the second bid) categorized in deciles. 
 
-```{r, include=TRUE, echo=TRUE, message = FALSE, warning = FALSE, size="tiny"}
+```{r, include=TRUE, echo=TRUE, message = FALSE, warning = FALSE} 
+# size="tiny"
 base = lm(Second.Bid ~ Engr.Est + Employment.in.construction + Format2 + Typeology + permits_1 + cci + quantile, data = train) 
 
   options(scipen=999)
@@ -273,16 +276,17 @@ base = lm(Second.Bid ~ Engr.Est + Employment.in.construction + Format2 + Typeolo
 The equation above throws a decent amount of information at the engineering estimate to try and enhance its predictive accuracy; the result might be called an "enhanced" prediction. 
 
 ```{r, echo=FALSE, include=FALSE, message = FALSE, warning = FALSE}
-summary(lm(base$fitted.values ~ train$Second.Bid))
+summary(lm(base$fitted.values ~ train$Second.Bid)) 
 ```
 
-Some regularization may be able to do better by selection variables for us.
+Some regularization may be able to do better by selecting variables for us.
 
 
 ##4b. Shrinkage and automated variable selection.
 
 Traditional methodology — tossing variables that made intuitive sense into a model and evaluating outcomes — might have identified a few reliable predictors. But it fell short and, even if it had, specification problems and omitted variable bias would have challenged the results.
-A survival method may help — automated variable selection can weed out weaker variables and identify one or more key items to help prediction. Regularization processes penalize variables that threaten to introduce more uncertainty than predictive power to a model. Regularization modeling builds atop ordinary least squares regression, which fits a curve that minimizes the distance between the curve and any given point in the data set. Traditional least squares modeling can be prone to overfitting — reading too much signal from what is essentially meaningless noise and providing a tool that creates a poor fit for data that, while tied to the underlying process being modeled, was absent during the fitting process; this presents obvious challenges for prediction.
+
+A survival method may help — automated variable selection can weed out weaker variables and identify one or more key items to help prediction. Regularization processes penalize variables that threaten to introduce more uncertainty than predictive power to a model. It builds atop ordinary least squares regression, which fits a curve that minimizes the distance between the curve and any given point in the data set. Traditional least squares modeling can be prone to overfitting — reading too much signal from what is essentially meaningless noise and providing a tool that creates a poor fit for data that, while tied to the underlying process being modeled, was absent during the fitting process; this presents obvious challenges for prediction.
 
 Regularization begins with the least squares method and adds a penalty. That penalty term is guided by a tuning parameter that essentially works as a dimmer switch — it can be cranked up to increase the penalty or down all the way to zero, which effectively turns off the penalty and produces the same results one would get from ordinary least squares. The tuning parameter is represented by the lambda in the second equation for error estimation (from James, Witten, Hastie and Tibshirani, 2013):
 
@@ -315,8 +319,7 @@ test2 = test[,-c(1:5,7:10,12,14,53)]
 ```
 
 ```{r, echo=FALSE, include=TRUE}
-set.seed(423)
-cv = cv.glmnet(x, train2[, 5], alpha = blend) 
+cv = cv.glmnet(x, train2[, 5], alpha = blend, nfolds = 5) 
 plot(cv) 
 ```
 
@@ -392,7 +395,7 @@ Plots and output from earlier exploratory bivariate work are below. Each conside
 
 ##Location
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
-b = round(summary(aov(bids$accuracy ~ bids$Loc))[[1]][["Pr(>F)"]][[1]],4)
+b = round(summary(aov(bids$accuracy ~ bids$Loc))[[1]][["Pr(>F)"]][[1]],4) 
 ggplot(bids, aes(x = Loc, y = accuracy)) + #, shape = Loc)) +  
     geom_hline(colour="dark gray", yintercept=1) +
     geom_jitter(width=0.2) +
