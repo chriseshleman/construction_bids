@@ -1,0 +1,174 @@
+---
+title: "Predicting costs :: Part 2"
+author: "Planning and Regional Development"
+date: "11/26/2019"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+\pagenumbering{arabic}
+
+
+#1. Summary
+Large projects - defined as the biggest 20 percent of 239 projects evaluated in Part 1 — and ones subjected to closed bidding processes explain a significant degree of the inaccuracy observed in agency cost estimation. Part 2 searches for predictive factors from within those two project subpopulations. It also considers the relationship between accuracy and the number of bidders, which was generally omitted from Part 1 as internal estimators do not know how many bidders will respond as they develop estimates. 
+
+The agency's internal cost estimates predict 95 percent of variation in cost, using the second-lowest bid^[The agency's internal regulations require, in all but a handful of cases, the acceptance of the lowest bid. The Engineering Department views the second-lowest bid as a better predictive target.] as a predicting target. Yet on an absolute basis^[Mean absolute error, MAE.], however, the gap between internal estimate and second-lowest bid averages $2.7 million, or 18 percent of the average project size. Reducing this gap would provide for stronger confidence in long-range capital capacity estimates and could reduce the need for project-level change orders. 
+
+
+```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
+rm(list = ls()) # clear global environment 
+cat("\014") # clear the console 
+options(warn=-1) # suppress annoying warnings 
+
+options(repos=structure(c(CRAN="http://lib.stat.cmu.edu/R/CRAN/"))) # set CRAN mirror
+
+ipak <- function(pkg){
+    new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+    if (length(new.pkg)) 
+        install.packages(new.pkg, dependencies = TRUE)
+    sapply(pkg, require, character.only = TRUE)
+}
+
+packages = c("png","grid","broom","tidytext","stats","widyr","Matrix","ggrepel",
+"MLmetrics","mltools","grid","arsenal","knitr","fastDummies","scales","hydroGOF")
+ipak(packages)
+
+library(olsrr) 
+library(data.table) 
+library(ggplot2) 
+library(lubridate) 
+library(doBy) 
+library(DataCombine) 
+library(dplyr) 
+library(compare) 
+library(StatMeasures) 
+library(qwraps2) 
+library(Hmisc) 
+library(caret) 
+library(mlbench) 
+library(glmnet) 
+library(tidyr) 
+library(tidyverse) 
+library(ggthemes) 
+```
+
+```{r, echo=FALSE, include=FALSE}
+# Control font size of chunk output
+def.chunk.hook = knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x = def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE)
+```
+
+
+#2. Motivation
+
+```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
+setwd("~/Dropbox/Work and research/Port Authority/construction_bids") 
+
+bids = read.csv("./Bids_data_set.csv") 
+bids$Date = as.Date(bids$Date,"%Y-%m-%d") 
+```
+
+```{r, echo=FALSE, include=TRUE}
+# Balance of second bid and engineer estimate, for visualizations.
+bids$bal = bids$Second.Bid - bids$Engr.Est 
+# Summary stats to help visualize some obvious potential predictors. 
+loc.summary = aggregate(accuracy ~ Loc, mean, data=na.omit(bids)) 
+type.summary = aggregate(accuracy ~ Typeology, mean, data=na.omit(bids)) 
+format.summary = aggregate(accuracy ~ Format, mean, data=na.omit(bids)) 
+quintile.summary = aggregate(accuracy ~ quantile, mean, data=na.omit(bids))
+quintile.summary2 = aggregate(bal ~ quantile, mean, data=na.omit(bids)) 
+ld.summary = aggregate(accuracy ~ LD, mean, data=na.omit(bids)) 
+```
+
+##Project size (dollars bid)
+```{r, echo=FALSE}
+ggplot(bids, aes(x = as.factor(quantile), y = bal)) + 
+    geom_hline(colour="dark gray", yintercept=1) +
+    geom_jitter(width=0.2) +
+    geom_crossbar(data=quintile.summary2, aes(ymin = bal, ymax = bal), 
+                  size=1,col="red", width = .5) + 
+      ylab("Second Bid minus Estimate") + 
+    theme(axis.title.y=element_text(size=10)) + 
+      scale_x_discrete(labels = c("$0-1.45M","$1.45-2.47M", "$2.47-$4.65M","$4.65-13.32M","$13.32M-4.8B")) + 
+  scale_y_continuous(label=comma) 
+```
+
+```{r}
+bids.big = subset(bids, bids$Second.Bid>=50000000) 
+```
+
+```{r, echo=FALSE, include=FALSE}
+# Project size can be considered categorically. 
+bids.big = bids.big %>%
+  mutate(quantile = ntile(as.numeric(Second.Bid), 5))
+
+bids.big$quantile = as.factor(bids.big$quantile) 
+
+bids.big %>%
+  select(Second.Bid, quantile) %>%
+  group_by(quantile) %>%
+  summarise(max = max(Second.Bid))
+
+bids.big$quantile = ordered(bids.big$quantile, levels = 1:5)
+
+quintile.summary.big = aggregate(bal ~ quantile, mean, data=na.omit(bids.big)) 
+```
+
+```{r, echo=FALSE, include=FALSE}
+table(bids.big$Bids)
+bids.big$bidders = ifelse(bids.big$Bids==2, "2", ifelse(bids.big$Bids==3, "3",
+                        ifelse(bids.big$Bids==5,"5","6+"))) 
+```
+
+
+```{r, echo=FALSE}
+ggplot(bids.big, aes(x = Second.Bid, y = bal, color=bidders)) + 
+    geom_point(shape = 21, colour = "black", size = 2.5, stroke = 0.5) + 
+    scale_color_brewer(palette="Greys") + 
+    geom_hline(yintercept = 0, color="gray") + 
+    geom_jitter(width=0.2) + 
+    ylab("Second Bid minus Estimate") + 
+    theme(axis.title.y=element_text(size=6), legend.position = c(.95, .5), 
+    legend.justification = c("right", "top"),
+    legend.box.just = "right",
+    legend.margin = margin(4, 4, 4, 4)) + 
+  
+  
+  
+  theme(
+  panel.background = element_rect(fill = "white",
+                                colour = "white",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.25, linetype = 'solid',
+                                colour = "gray95"), 
+  panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
+                                colour = "gray95")
+  ) + 
+
+
+
+    scale_x_continuous(label=comma, limits = c(0,600000000)) + 
+    scale_y_continuous(label=comma, limits = c(-100000000,25000000)) + 
+    ggrepel::geom_text_repel(aes(label = Proj), color = "gray50", 
+                           size = 2.5, segment.color = "grey") 
+    #theme_tufte()
+```
+
+
+```{r}
+options(scipen=999)
+ggplot(bids.big, aes(x = Second.Bid, y = bal, color = Bids)) + 
+      scale_colour_gradient(low = "white", high = "black") +  geom_point(size=2) +
+  scale_y_continuous(label=comma) + 
+  scale_x_continuous(label=comma) + 
+    ggrepel::geom_text_repel(aes(label = Proj), color = "grey35", size = 2.5, segment.color = "grey") 
+```
+

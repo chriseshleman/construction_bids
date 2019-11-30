@@ -3,11 +3,11 @@ title: "Predicting costs"
 author: "Planning and Regional Development"
 date: "11/13/2019"
 output:
-  pdf_document:
-    latex_engine: xelatex
+  word_document: default
   html_document:
     df_print: paged
-  word_document: default
+  pdf_document:
+    latex_engine: xelatex
 ---
 
 \pagenumbering{arabic}
@@ -57,6 +57,8 @@ library(mltools)
 library(grid) 
 library(arsenal) 
 library(knitr) 
+#install.packages("fastDummies") 
+library(fastDummies) 
 require(scales) 
 #library(devtools) 
 #devtools::install_github("rstudio/rmarkdown")
@@ -78,7 +80,8 @@ opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE)
 Project-level characteristics, referred to here as the "bids" data set, come from the Engineering Department. Economic and demographic indicators are specific to Greater New York (18 counties on both sides of the Hudson River) and come from the Planning and Regional Development Department; underlying data is from Oxford Economics. Construction permitting data comes from the City of New York's Department of Buildings. The Engineering News-Record's construction cost index (CCI) serves as proxy for broader construction costs. Data not specific to project, such as economic variables and permitting, is quarterly.
 
 ```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
-setwd("~/Dropbox/Work and research/Port Authority/construction_bids") 
+#setwd("~/Dropbox/Work and research/Port Authority/construction_bids") 
+setwd("C:/Users/ceshleman/Dropbox/Work and research/Port Authority/construction_bids")
 bids = read.csv("./Bid data 2019q3.csv") 
 bids$Year = as.factor(bids$Year) 
 
@@ -154,14 +157,25 @@ Five projects attracted only one bid. They averaged only $3.2 million (second-lo
 bids$accuracy = bids$Second.Bid / bids$Engr.Est 
 ```
 
-```{r, echo=FALSE}
+Find quintile boundaries: 
+```{r, echo=FALSE, include=FALSE}
 # Project size can be considered categorically. 
 bids = bids %>%
   mutate(quantile = ntile(as.numeric(Second.Bid), 5))
 bids$quantile = as.factor(bids$quantile) 
-bids$quantile = ordered(bids$quantile, levels = 1:5) 
 ```
 
+```{r, echo=FALSE, include=TRUE}
+bids %>%
+  select(Second.Bid, quantile) %>%
+  group_by(quantile) %>%
+  summarise(max = max(Second.Bid))
+```
+
+```{r, echo=FALSE}
+bids$quantile = ordered(bids$quantile, levels = 1:5) 
+#, labels = c("$0-1.45M","$1.45-2.47M", "$2.47-$4.65M","$4.65-13.32M","$13.32M-4.8B")
+```
 
 ```{r, echo=FALSE, message = FALSE, warning = FALSE}
 # Reformat some of the variables, namely the economic indicators, to accommodate programming platform.  
@@ -298,7 +312,7 @@ Run cross-validation to pick the tuning parameter. Cross-validation uses iterati
 
 Note: to help here with manageability and reproducibility, adopt some of the modeling software’s basic assumptions (10 folds, standardized coefficients, use of mean squared error as an evaluation metric, et cetera).
 
-This analysis uses a blended regularization penalty that falls between ridge and lasso (the "alpha" is set at 0.25):
+This analysis uses a blended regularization penalty that falls between ridge and lasso (the "alpha" is set at 0.3):
 
 ```{r, echo=TRUE, include=FALSE, message = FALSE, warning = FALSE}
 # Pare the data set to exclude variables inappropriate for the modeling process. 
@@ -313,6 +327,7 @@ test2 = test[,-c(1:5,7:10,12,14,53,58)]
 ```
 
 ```{r, echo=FALSE, include=TRUE}
+set.seed(1043) 
 cv = cv.glmnet(x, train2[, 5], alpha = blend, nfolds = 5) 
 plot(cv) 
 ```
@@ -324,6 +339,7 @@ The result suppresses all but a pair of predictors: project size and bidding pro
 (Very technical note: this regularization process actually carries the prospect of increasing bias and, in the process, dulling coefficients’ reflection of the real world relationship between the processes being modeled. (It can introduce or exacerbate bias.) This harsh variable selection process is appropriate given the original estimates’ obvious raw predictive strength. A little fine-tuning to the penalty combines the regularization treatments and gives the model just enough leash to identify predictors that survive as the model gets further from ordinary least squares without disappearing.
 
 ```{r, echo=FALSE, include=TRUE}
+set.seed(223)
 cv.model = glmnet(x, train2[, 5], alpha=blend, lambda=cv$lambda.1se) 
 ```
 
@@ -377,8 +393,21 @@ bids$quantile = as.factor(bids$quantile)
 
 ##Project size and bidding process
 ```{r, echo=TRUE, include=TRUE, size="tiny"}
-summary(lm(bids$Second.Bid ~ bids$Engr.Est + bids$quantile_2 + bids$quantile_3 + bids$quantile_4 + bids$quantile_5 + bid$Format2))  
+final = lm(log(bids$Second.Bid) ~ bids$Engr.Est + bids$quantile_2 + bids$quantile_3 + bids$quantile_4 + bids$quantile_5 + bids$Format2)
+final2 = lm(log(bids$Second.Bid) ~ bids$Engr.Est + bids$quantile_5 + bids$Format2) 
 ```
+
+```{r, echo=FALSE, include=TRUE}
+summary(final) 
+summary(final2) 
+write.csv( tidy(final) , "./coefs.csv" )
+write.csv( glance(final) , "./an.csv" )
+write.csv(final$fitted.values,"./Predictions 20191120.csv") 
+write.csv( tidy(final2) , "./coefs2.csv" )
+write.csv( glance(final2) , "./an2.csv" )
+write.csv(final2$fitted.values,"./Predictions2 20191120.csv") 
+```
+
 
 \pagebreak
 
@@ -417,7 +446,7 @@ ggplot(bids, aes(x = Format, y = accuracy)) + #, shape = Loc)) +
     annotate(geom="text", x=2, y=3.5, label="p-value", 
               color="red") +
     annotate(geom="text", x=2, y=3.25, label=c, 
-              color="red")
+              color="red") 
 ```
 
 ##Project typeology
@@ -465,7 +494,8 @@ ggplot(bids, aes(x = as.factor(quantile), y = accuracy)) +
       annotate(geom="text", x=2, y=3.5, label="p-value", 
               color="red") +
     annotate(geom="text", x=2, y=3.25, label=f, 
-              color="red")
+              color="red") + 
+    scale_x_discrete(labels = c("$0-1.45M","$1.45-2.47M", "$2.47-$4.65M","$4.65-13.32M","$13.32M-4.8B"))
 ```
 
 ##Project size (dollars bid)
@@ -476,7 +506,9 @@ ggplot(bids, aes(x = as.factor(quantile), y = bal)) +
     geom_crossbar(data=quintile.summary2, aes(ymin = bal, ymax = bal), 
                   size=1,col="red", width = .5) + 
       ylab("Second Bid minus Estimate") + 
-    theme(axis.title.y=element_text(size=10)) 
+    theme(axis.title.y=element_text(size=10)) + 
+      scale_x_discrete(labels = c("$0-1.45M","$1.45-2.47M", "$2.47-$4.65M","$4.65-13.32M","$13.32M-4.8B")) + 
+  scale_y_continuous(label=comma) 
 ```
 
 
@@ -496,10 +528,8 @@ ggplot(bids, aes(x = as.factor(quantile), y = bal, color = Bids)) +
     legend.justification = c("right", "top"),
     legend.box.just = "right",
     legend.margin = margin(6, 6, 6, 6)) + 
-      annotate(geom="text", x=2, y=3.5, label="p-value", 
-              color="red") +
-    annotate(geom="text", x=2, y=3.25, label=f, 
-              color="red") 
+      scale_x_discrete(labels = c("$0-1.45M","$1.45-2.47M", "$2.47-$4.65M","$4.65-13.32M","$13.32M-4.8B")) + 
+  scale_y_continuous(label=comma) 
 ```
 
 
