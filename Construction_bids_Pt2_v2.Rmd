@@ -215,16 +215,3 @@ ggplot(bids.small, aes(x = as.factor(decile), y = accuracy, colour=Bids)) +
   geom_jitter() 
 ```
 
-
-```{r}
-final = lm(bids$Second.Bid ~ bids$Engr.Est + bids$quantile_2 + bids$quantile_3 + bids$quantile_4 + bids$quantile_5 + bids$Format2)
-  options(scipen=999)
-  summary(final) 
-```
-
-
-```{r}
-final.wbids = lm(bids$Second.Bid ~ bids$Engr.Est + bids$quantile_2 + bids$quantile_3 + bids$quantile_4 + bids$quantile_5 + bids$Format2 + bids$Bids) 
-summary(final.wbids) 
-```
-
