@@ -365,6 +365,10 @@ train2 = train[,-c(1:5,7:10,12,14,34,53,57:58)]
 test2 = test[,-c(1:5,7:10,12,14,34,53,57:58)] 
   test2 = na.omit(test2) 
   x = train2[,-5]
+names(train2) 
+    write.csv(train2, "./Train_for_training_Pt1.csv") 
+    write.csv(x, "./X_for_training_Pt1.csv")
+  
   x = data.matrix(x) 
 ```
 

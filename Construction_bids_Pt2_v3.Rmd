@@ -12,6 +12,7 @@ output:
 
 \pagenumbering{arabic}
 
+#1. Summary
 Large projects - defined as the biggest 20 percent of 239 projects evaluated in Part 1 — and ones subjected to closed bidding processes explain a significant degree of the inaccuracy observed in agency cost estimation. Part 2 searches for predictive factors from within those two project subpopulations. It also considers the relationship between accuracy and the number of bidders, which was generally omitted from Part 1 as internal estimators do not know how many bidders will respond as they develop estimates. 
 
 The agency's internal cost estimates predict 95 percent of variation in cost, using the second-lowest bid^[The agency's internal regulations require, in all but a handful of cases, the acceptance of the lowest bid. The Engineering Department views the second-lowest bid as a better predictive target.] as a predicting target. On an absolute basis^[Mean absolute error, MAE.], however, the gap between internal estimate and second-lowest bid averages $2.7 million, or 18 percent of the average project size. Reducing this gap would provide for stronger confidence in long-range capital capacity estimates and could reduce the need for project-level change orders. 
@@ -49,6 +50,7 @@ library(qwraps2)
 library(Hmisc) 
 library(caret) 
 library(mlbench) 
+library(psych) 
 library(glmnet) 
 library(tidyr) 
 library(tidyverse) 
@@ -98,9 +100,10 @@ ld.summary = aggregate(accuracy ~ LD, mean, data=na.omit(bids.big))
 ```
 
 
-###Focus on largest projects
-```{r, echo=FALSE}
-summary(bids.big$Engr.Est) 
+#2. Focus on largest projects
+
+A glance at the list of 17 projects above $60 million immediately identifies two projects where the agency and bidders (second-lowest bidders) significantly disagreed over expected costs: 
+```{r, echo=FALSE, fig.align = 'center'}
 ggplot(bids.big, aes(x = as.factor(quantile), y = bal)) + #color = Bids
       scale_colour_gradient(low = "white", high = "black") +
     geom_hline(colour="dark gray", yintercept=1) +
@@ -118,8 +121,49 @@ ggplot(bids.big, aes(x = as.factor(quantile), y = bal)) + #color = Bids
   geom_text(position=position_jitter(width=0,height=8), aes(label=Proj),hjust=0, vjust=0, size=3) 
 ```
 
-###Number of bidders
-```{r, echo=FALSE}
+Consider how much of big projects' explanatory power may be due to the two large misses in the third and fourth quantiles above. 
+
+```{r, echo=FALSE, include=FALSE}
+subset(bids,bids$Proj=="PAT-650")
+subset(bids,bids$Proj=="HT-224.130") 
+```
+
+The Holland Tunnel (HT-224.130) project reflects major repairs to salt damage dated July 2019. It also collected five bids, of which the first ($135 million) and second ($159 million) were roughly two-fifths below the estimate ($249 million). 
+
+The PATH (PAT-650) project above represents repairs to PATH Tunnels E and F, dated January 2018, that was estimated at $200 million but attracted much lower bids — nearly half that figure for both the first ($108 million) and second ($112 million) bids. 
+
+Both are infrastructure projects.^[The data's "typeology" variable classifies projects as one of three categories: infrastructure, building, or paving.] While typeology did not emerge as one of the most significant predictors of estimation accuracy in Part 1, uncontrolled and non-penalized analysis had indicated infrastructure and building projects evaded accurate estimation more commonly than did paving projects; infrastructure projects also account for a larger share of the biggest work, making up one-half of the analyses' 239 projects but nearly all (14 of 17) of the largest projects: 
+
+```{r, echo=FALSE, include=FALSE}
+table(bids$Typeology) 
+table(bids.big$Typeology) 
+```
+
+
+```{r, echo=FALSE, include=TRUE}
+prop.table(table(bids$Typeology))*100
+prop.table(table(bids.big$Typeology))*100 
+```
+
+Bottom line: the two projects are large infrastructure projects, one of which is at a department (PATH) that has less typical projects (e.g. no relatively predictable paving work) and suffered significant damage from Hurricane Sandy. 
+
+```{r, include=TRUE, echo=FALSE}
+describeBy(bids$Second.Bid,bids$Typeology) 
+```
+
+Re-thinking the penalized algorithm after excluding the two major misses from the data set changes the regularized parameter set noticably. (See last page of output.) A number of variables that had vanished under penalization become significant, even when applying the same penalty. They're generally endogenous project characteristics (versus exogenous market characteristics): location, typeology and an indicator for the very smallest projects, which may be difficult to estimate for their own reasons. But the original two variables of significance — bidding process and the indicator for the largest projects — remain significant, which suggests the results from Part 1's interation using all observations remains robust. 
+
+
+#3. Number of bidders
+All analyses has excluded the number of bidders. Including bidders would provide information not available to agency estimators prior to the bidding process and, as such, would confound results and detract from efforts to identify predictive metrics useful for operations. We anticipate, however, further interest in the relationship between bidders and accuracy and are prepared to explore the relationship further. 
+
+An uncontrolled look suggests the number of bids may be significantly related to project accuracy, prior to accounting for (holding constant) other variables when focusing on the second-lowest bids. (The more bids, the lower the second-lowest bid relative to agency estimate.) A glance at this relationship for projects above $60 million does not provide compelling evidence that a broad relationship between bid counts and accuracy would hold when trying to predict the largest projects: 
+
+```{r, echo=FALSE, include=FALSE}
+summary(glm(accuracy ~ Bids, family="poisson", data=bids)) #lm.bids = 
+```
+
+```{r, echo=FALSE, fig.align = 'center'}
 ggplot(bids.big, aes(x = as.factor(quantile), y = bal, color = Bids)) + 
       scale_colour_gradient(low = "white", high = "black") +
     geom_hline(colour="dark gray", yintercept=1) +
@@ -136,3 +180,33 @@ ggplot(bids.big, aes(x = as.factor(quantile), y = bal, color = Bids)) +
   scale_y_continuous(label=comma) 
 ```
 
+Future work can explicitly focus on bids' relationship to accuracy, with the working assumption that the presence of fewer bids may, after properly controlling for other factors, drive costs (bid size) higher. The potential relationship, however, is nuanced enough to defer more in-depth discussion for future work. 
+
+```{r, echo=FALSE, include=FALSE}
+summary(lm(bids$Second.Bid ~ bids$Engr.Est))
+```
+
+
+\pagebreak
+
+##Output: Variable Selection excluding PAT-650 and HT-224.130
+
+```{r, echo=FALSE, include=FALSE}
+train2 = read.csv("./Train_for_training_Pt1.csv")
+  train2$X = NULL 
+x = read.csv("./X_for_training_Pt1.csv") 
+  x$X = NULL 
+train2 = subset(train2, train2$Engr.Est!=200000000 & train2$Engr.Est!=249010000)
+x = subset(x, x$Engr.Est!=200000000 & x$Engr.Est!=249010000)
+x = data.matrix(x) 
+set.seed(108) 
+cv = cv.glmnet(x, train2[, 5], alpha = .15, nfolds = 5) 
+set.seed(250) 
+cv.model = glmnet(x, train2[, 5], alpha = .15, lambda=cv$lambda.1se) 
+# size="tiny" 
+cv.model 
+```
+
+```{r, echo=FALSE, include=TRUE}
+coef(cv.model) 
+```
