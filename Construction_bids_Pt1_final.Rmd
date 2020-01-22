@@ -607,7 +607,7 @@ coef(final.cv)
 options(warn=0) # allow annoying warnings 
 ```
 
-```{r}
+```{r, echo=FALSE, include=FALSE}
 write.csv(bids,"./Bids from Pt1.csv") 
 ```
 

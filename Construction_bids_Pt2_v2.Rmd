@@ -1,7 +1,7 @@
 ---
 title: "Predicting costs :: Part 2"
 author: "Planning and Regional Development"
-date: "11/26/2019"
+date: "1/21/2020"
 output:
   pdf_document:
     latex_engine: xelatex
@@ -12,11 +12,9 @@ output:
 
 \pagenumbering{arabic}
 
-
-#1. Summary
 Large projects - defined as the biggest 20 percent of 239 projects evaluated in Part 1 — and ones subjected to closed bidding processes explain a significant degree of the inaccuracy observed in agency cost estimation. Part 2 searches for predictive factors from within those two project subpopulations. It also considers the relationship between accuracy and the number of bidders, which was generally omitted from Part 1 as internal estimators do not know how many bidders will respond as they develop estimates. 
 
-The agency's internal cost estimates predict 95 percent of variation in cost, using the second-lowest bid^[The agency's internal regulations require, in all but a handful of cases, the acceptance of the lowest bid. The Engineering Department views the second-lowest bid as a better predictive target.] as a predicting target. Yet on an absolute basis^[Mean absolute error, MAE.], however, the gap between internal estimate and second-lowest bid averages $2.7 million, or 18 percent of the average project size. Reducing this gap would provide for stronger confidence in long-range capital capacity estimates and could reduce the need for project-level change orders. 
+The agency's internal cost estimates predict 95 percent of variation in cost, using the second-lowest bid^[The agency's internal regulations require, in all but a handful of cases, the acceptance of the lowest bid. The Engineering Department views the second-lowest bid as a better predictive target.] as a predicting target. On an absolute basis^[Mean absolute error, MAE.], however, the gap between internal estimate and second-lowest bid averages $2.7 million, or 18 percent of the average project size. Reducing this gap would provide for stronger confidence in long-range capital capacity estimates and could reduce the need for project-level change orders. 
 
 
 ```{r echo=FALSE, results="hide", message = FALSE, warning = FALSE}
@@ -180,8 +178,8 @@ The statistical significance of bidding process identified earlier was limited t
 
 ```{r, echo=FALSE}
 options(scipen=999) 
-table(bids$Format,bids$decile) 
-bids.small = subset(bids,bids$Second.Bid<=5000000) 
+table(bids$Format,bids$quantile) 
+bids.small = subset(bids,bids$Second.Bid<=6000000) 
 bids.small$decile = decile(vector = bids.small$Second.Bid) 
 bids.small$decile = ordered(bids.small$decile, levels = 1:10) 
 #bids.small = subset(bids.small,bids.small$Format!="Other") 
@@ -190,13 +188,20 @@ bids.small$decile = ordered(bids.small$decile, levels = 1:10)
 ```{r, echo=FALSE, include=TRUE}
 ggplot(bids.small, aes(x = as.factor(decile), y = accuracy, colour = Format)) + 
     geom_jitter(width=0.2) 
+str(bids.small$decile) 
+
+aggregate(bids.small$Second.Bid, list(bids.small$decile), max) #[, 3:4]
+
+bids.small = subset(bids.small,bids.small$Second.Bid>=992000) 
 ```
+
+There isn't much of an issue for the very smallest projects. Estimates are pretty much on the money, irrespective of the type of bidding process involved. And - they're very small projects, even more justification to focus on remaining projects, which fall between $1 million and $50 million in size. 
 
 ```{r, echo=TRUE, include=TRUE}
-summary(lm(bids.small$accuracy ~ bids.small$Format))
+summary(lm(bids.small$accuracy ~ bids.small$Format)) 
 ```
 
-The implications of bidding process emerges from the difference between average accuracy for projects bid publicly and those tagged SBE. The relationship loses statistical significance when turning to public-versus-M/WBE projects, but not by much, and the coefficent is the same sign, and we lump SBE and M/WBE together for a collective look: 
+The implications of bidding process emerges from the difference between average accuracy for projects bid publicly and those tagged SBE and M/WBE. The relationship loses statistical significance when turning to public-versus-M/WBE projects, but not by much, and the coefficent is the same sign, and we lump SBE and M/WBE together for a collective look: 
 
 ```{r}
 summary(lm(bids.small$accuracy ~ bids.small$Format2))
@@ -204,7 +209,13 @@ summary(lm(bids.small$accuracy ~ bids.small$Format2))
 
 So what could be explaining the influence bidding process has on accuracy? First explain bidding process. Does it vary significantly by project size? Project typeology?^[(If so, it could help explain the accuracy's variation (in Part 1) by typeology.)] By line department or location? 
 
-```{r}
+```{r, echo=TRUE, include=TRUE}
+ggplot(bids.small, aes(x = Format2, y = accuracy, color=Loc, size = Second.Bid)) + 
+    geom_hline(colour="dark gray", yintercept=1) +
+    geom_jitter(width=0.3) +
+      ylab("Second Bid ÷ Estimate") + 
+    theme(axis.title.y=element_text(size=10)) 
+
 summary(glm(bids.small$Format2 ~ bids.small$decile + bids.small$Typeology + bids.small$Loc + bids.small$LD, family=binomial)) 
 ```
 
